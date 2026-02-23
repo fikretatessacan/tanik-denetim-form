@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>F701-056 Tanık Denetim Formu</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+:root {
+  --bg:#f0ede6; --card:#fff; --ink:#1a1a2e; --mid:#6b7280;
+  --light:#e2ddd6; --accent:#1e3a5f; --accent2:#c8423a;
+  --green:#2d6a4f; --red:#c8423a; --gray:#6b7280;
+  --border:#d4cfc4; --gold:#b8860b;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+
+/* ── HEADER ── */
+.app-header{
+  background:var(--accent);padding:.9rem 1.25rem;
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 2px 12px rgba(0,0,0,0.2);
+}
+.header-left{display:flex;align-items:center;gap:10px}
+.turkak-badge{
+  background:#fff;color:var(--accent);font-family:'Syne',sans-serif;
+  font-weight:800;font-size:11px;padding:5px 10px;border-radius:6px;white-space:nowrap;
+}
+.header-title{color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;line-height:1.2}
+.header-sub{color:rgba(255,255,255,0.5);font-size:11px;margin-top:1px}
+.header-right{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+
+/* ── CURRENT FILE BAR ── */
+.file-bar{
+  background:rgba(0,0,0,0.15);border-bottom:1px solid rgba(255,255,255,0.08);
+  padding:.5rem 1.25rem;display:flex;align-items:center;gap:8px;
+  position:sticky;top:64px;z-index:99;
+}
+.file-bar-path{
+  flex:1;font-size:11px;color:rgba(255,255,255,0.6);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.file-bar-path strong{color:rgba(255,255,255,0.9)}
+.file-bar-status{
+  font-size:10px;padding:3px 8px;border-radius:10px;font-weight:600;white-space:nowrap;
+}
+.fbs-new{background:rgba(201,168,76,0.25);color:#f0c040;border:1px solid rgba(201,168,76,0.4)}
+.fbs-saved{background:rgba(45,106,79,0.25);color:#7ee8a2;border:1px solid rgba(45,106,79,0.4)}
+.fbs-dirty{background:rgba(200,66,58,0.2);color:#ff8a80;border:1px solid rgba(200,66,58,0.4)}
+.fbs-sync{background:rgba(201,168,76,0.2);color:#f0c040;border:1px solid rgba(201,168,76,0.3)}
+
+/* ── BUTONLAR ── */
+.btn{
+  border:none;border-radius:8px;padding:8px 12px;
+  font-size:12px;font-weight:600;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:opacity .15s,transform .1s;
+  white-space:nowrap;
+}
+.btn:active{transform:scale(.97)}
+.btn-ghost{background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)}
+.btn-fire{background:#ff6d00;color:#fff}
+.btn-green{background:var(--green);color:#fff}
+.btn-accent{background:var(--accent2);color:#fff}
+.btn-gray{background:var(--light);color:var(--ink);border:1px solid var(--border)}
+
+/* ── MAIN ── */
+.main{padding:1.25rem;max-width:900px;margin:0 auto;padding-bottom:6rem}
+
+/* ── KART ── */
+.kart{background:var(--card);border-radius:18px;border:1px solid var(--border);margin-bottom:1rem;overflow:hidden}
+.kart-header{background:var(--accent);padding:.9rem 1.25rem;display:flex;align-items:center;justify-content:space-between}
+.kart-title{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#fff}
+.kart-sub{font-size:11px;color:rgba(255,255,255,0.5)}
+.kart-body{padding:1.25rem}
+
+/* ── FIELD ── */
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fl{font-size:10px;font-weight:600;color:var(--mid);letter-spacing:1px;text-transform:uppercase}
+.fi{
+  background:var(--bg);border:1.5px solid var(--border);border-radius:10px;
+  padding:10px 12px;font-size:14px;font-family:'DM Sans',sans-serif;
+  color:var(--ink);outline:none;width:100%;transition:border-color .2s;
+}
+.fi:focus{border-color:var(--accent)}
+textarea.fi{resize:none;min-height:65px}
+.divider{display:flex;align-items:center;gap:10px;margin:1rem 0 .75rem}
+.divider-line{flex:1;height:1px;background:var(--border)}
+.divider-text{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid)}
+
+/* ── KONTROL TABLOSU ── */
+.tbl-header{
+  display:grid;grid-template-columns:1fr 110px 1fr;
+  background:#f5f2eb;border-bottom:1.5px solid var(--border);
+  padding:.6rem 1rem;gap:8px;
+}
+.th{font-size:10px;font-weight:700;color:var(--mid);letter-spacing:.8px;text-transform:uppercase}
+.th.c{text-align:center}
+.kontrol-row{
+  display:grid;grid-template-columns:1fr 110px 1fr;
+  padding:.75rem 1rem;gap:8px;border-bottom:1px solid #f0ede6;align-items:start;
+}
+.kontrol-row:last-child{border-bottom:none}
+.kontrol-row:hover{background:#faf9f7}
+.kmadde{font-size:10px;font-weight:700;color:var(--accent);margin-bottom:2px}
+.ktext{font-size:13px;color:var(--ink);line-height:1.45}
+.ktext-en{font-size:10.5px;color:var(--mid);font-style:italic;margin-top:1px;line-height:1.3}
+
+/* ── DROPDOWN ── */
+.durum-select{
+  width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);
+  background:var(--bg);color:var(--mid);font-size:13px;font-weight:600;
+  font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;
+  transition:all .15s;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
+}
+.durum-select.val-Y{background-color:rgba(45,106,79,.08);border-color:var(--green);color:var(--green);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%232d6a4f' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")}
+.durum-select.val-YD{background-color:rgba(200,66,58,.08);border-color:var(--red);color:var(--red);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c8423a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")}
+.durum-select.val-UD{background-color:rgba(107,114,128,.08);border-color:var(--gray);color:var(--gray);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")}
+.yorum-input{
+  background:var(--bg);border:1.5px solid var(--border);border-radius:8px;
+  padding:8px 10px;font-size:12px;font-family:'DM Sans',sans-serif;
+  color:var(--ink);outline:none;resize:none;min-height:58px;width:100%;transition:border-color .2s;
+}
+.yorum-input:focus{border-color:var(--accent)}
+.yorum-input.yd{border-color:var(--red);background:rgba(200,66,58,.04)}
+
+/* ── İMZA ── */
+.imza-grid{display:grid;grid-template-columns:1fr 1fr}
+.imza-col{padding:1.25rem;border-right:1px solid var(--border)}
+.imza-col:last-child{border-right:none}
+.imza-title{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--accent);margin-bottom:1rem}
+.sig-wrap{background:var(--bg);border:2px dashed var(--border);border-radius:10px;height:100px;position:relative;overflow:hidden;cursor:crosshair;margin-bottom:6px}
+canvas.sig{position:absolute;top:0;left:0;width:100%;height:100%}
+.sig-ph{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;color:var(--mid);pointer-events:none;transition:opacity .2s}
+.sig-clear{font-size:11px;color:var(--accent2);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;padding:2px 0;display:block;margin-bottom:8px}
+
+/* ── NOTLAR ── */
+.notlar{background:rgba(30,58,95,.05);border-radius:14px;border:1px solid rgba(30,58,95,.15);padding:1rem 1.25rem;margin-bottom:1rem}
+.notlar p{font-size:11.5px;color:var(--mid);line-height:1.6;margin-bottom:4px}
+
+/* ── ALT BAR ── */
+.ozet-bar{
+  position:fixed;bottom:0;left:0;right:0;background:var(--card);
+  border-top:1px solid var(--border);padding:.75rem 1.25rem;
+  display:flex;align-items:center;justify-content:space-between;
+  z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,.06);
+}
+.ozet-counts{display:flex;gap:16px}
+.ozet-item{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%}
+.dot.y{background:var(--green)}.dot.yd{background:var(--red)}.dot.ud{background:var(--gray)}
+.save-btns{display:flex;gap:6px}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);
+  background:var(--ink);color:#fff;padding:10px 20px;border-radius:20px;
+  font-size:13px;opacity:0;transition:all .3s;z-index:999;pointer-events:none;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── MODAL GENEL ── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);
+  z-index:200;align-items:flex-end;
+}
+.modal-overlay.open{display:flex}
+.modal-sheet{
+  background:var(--card);border-radius:20px 20px 0 0;
+  width:100%;max-height:80vh;overflow-y:auto;
+}
+.modal-head{
+  padding:1.25rem 1.25rem .75rem;display:flex;
+  justify-content:space-between;align-items:center;
+  border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--card);z-index:1;
+}
+.modal-head-title{font-family:'Syne',sans-serif;font-weight:800;font-size:16px}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--mid)}
+.modal-body{padding:1.25rem}
+
+/* ── KAYIT LİSTESİ ── */
+.kayit-item{
+  padding:.9rem 1rem;border-radius:12px;border:1px solid var(--border);
+  margin-bottom:8px;cursor:pointer;transition:background .15s;
+  display:flex;align-items:center;gap:10px;
+}
+.kayit-item:hover{background:var(--bg)}
+.kayit-item.active-record{border-color:var(--accent);background:rgba(30,58,95,.05)}
+.kayit-icon{font-size:22px;flex-shrink:0}
+.kayit-info{flex:1;min-width:0}
+.kayit-ad{font-weight:600;font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kayit-meta{font-size:11px;color:var(--mid);margin-top:2px}
+.kayit-klasor{font-size:10px;color:var(--accent);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.word-badge{font-size:10px;padding:2px 7px;border-radius:5px;font-weight:600;white-space:nowrap}
+.wb-ok{background:rgba(45,106,79,.1);color:var(--green);border:1px solid rgba(45,106,79,.2)}
+.wb-wait{background:rgba(201,168,76,.15);color:#a07800;border:1px solid rgba(201,168,76,.3)}
+.wb-err{background:rgba(200,66,58,.1);color:var(--red);border:1px solid rgba(200,66,58,.2)}
+.kayit-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.kayit-ozet{display:flex;gap:6px}
+.kayit-actions{display:flex;gap:4px}
+.kayit-act-btn{
+  background:none;border:1px solid var(--border);border-radius:6px;
+  padding:4px 8px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;
+  color:var(--mid);transition:all .15s;
+}
+.kayit-act-btn:hover{background:var(--bg);color:var(--ink)}
+.kayit-act-btn.del:hover{border-color:var(--red);color:var(--red)}
+
+/* ── KLASÖR SEÇİMİ ── */
+.klasor-list{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem}
+.klasor-item{
+  padding:.8rem 1rem;border-radius:10px;border:1.5px solid var(--border);
+  cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .15s;
+}
+.klasor-item:hover{background:var(--bg);border-color:var(--accent)}
+.klasor-item.selected{border-color:var(--accent);background:rgba(30,58,95,.06)}
+.klasor-icon{font-size:20px}
+.klasor-name{font-weight:600;font-size:13px}
+.klasor-path{font-size:11px;color:var(--mid);margin-top:1px}
+.klasor-check{margin-left:auto;color:var(--accent);font-size:16px;opacity:0}
+.klasor-item.selected .klasor-check{opacity:1}
+
+.new-klasor-row{display:flex;gap:8px;margin-top:8px}
+.new-klasor-input{
+  flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;
+  padding:10px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;
+}
+.new-klasor-input:focus{border-color:var(--accent)}
+
+/* ── KAYDET MOD ── */
+.save-mod-sheet{
+  background:var(--card);border-radius:20px 20px 0 0;
+  width:100%;padding:0;
+}
+.save-mod-option{
+  display:flex;align-items:center;gap:12px;padding:1rem 1.25rem;
+  border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;
+}
+.save-mod-option:last-child{border-bottom:none}
+.save-mod-option:hover{background:var(--bg)}
+.smo-icon{font-size:24px;flex-shrink:0}
+.smo-title{font-weight:600;font-size:14px}
+.smo-desc{font-size:12px;color:var(--mid);margin-top:2px}
+.smo-badge{
+  margin-left:auto;font-size:10px;padding:3px 8px;border-radius:6px;font-weight:600;flex-shrink:0;
+}
+.smo-badge.over{background:rgba(200,66,58,.12);color:var(--red)}
+.smo-badge.new{background:rgba(45,106,79,.12);color:var(--green)}
+
+/* ── FILTER ── */
+.kayit-filters{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.filter-btn{
+  padding:6px 12px;border-radius:8px;border:1.5px solid var(--border);
+  background:var(--bg);font-size:12px;font-weight:500;cursor:pointer;
+  font-family:'DM Sans',sans-serif;color:var(--mid);transition:all .15s;
+}
+.filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* ── ARAMA ── */
+.search-input{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;
+  padding:10px 12px 10px 36px;font-size:13px;font-family:'DM Sans',sans-serif;
+  color:var(--ink);outline:none;margin-bottom:1rem;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:10px center;
+}
+.search-input:focus{border-color:var(--accent)}
+
+@media(max-width:640px){
+  .fgrid{grid-template-columns:1fr}
+  .tbl-header{display:none}
+  .kontrol-row{grid-template-columns:1fr;gap:6px}
+  .imza-grid{grid-template-columns:1fr}
+  .imza-col{border-right:none;border-bottom:1px solid var(--border)}
+  .imza-col:last-child{border-bottom:none}
+  .header-right{gap:4px}
+  .save-btns{gap:4px}
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- HEADER -->
+<div class="app-header">
+  <div class="header-left">
+    <div class="turkak-badge">TÜRKAK</div>
+    <div>
+      <div class="header-title">Tanık Denetim Formu</div>
+      <div class="header-sub">F701-056 · Rev.03</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-ghost" onclick="openKayitlar()">📂 Aç</button>
+    <button class="btn btn-ghost" onclick="yeniForm()">+ Yeni</button>
+    <button class="btn btn-fire" onclick="openSaveMod()">💾 Kaydet</button>
+  </div>
+</div>
+
+<!-- DOSYA DURUM BARІ -->
+<div class="file-bar" style="background:var(--accent)">
+  <span id="file-bar-path" class="file-bar-path">📄 Yeni form</span>
+  <span id="file-bar-status" class="file-bar-status fbs-new">Yeni</span>
+</div>
+
+<div class="main">
+
+  <!-- ÜST BİLGİ -->
+  <div class="kart">
+    <div class="kart-header">
+      <div>
+        <div class="kart-title">Genel Bilgiler</div>
+        <div class="kart-sub">F701-056 / Rev.03 / 0119 · Sheet of Objective Evidence</div>
+      </div>
+    </div>
+    <div class="kart-body">
+      <div class="fgrid" style="margin-bottom:10px">
+        <div class="fg">
+          <label class="fl">Kuruluşun Adı / Name of the CAB</label>
+          <input class="fi" id="f_kab_adi" placeholder="Kuruluş adı..." oninput="markDirty()">
+        </div>
+        <div class="fgrid" style="gap:8px">
+          <div class="fg">
+            <label class="fl">Denetim Tarihi</label>
+            <input class="fi" id="f_tarih" type="date" oninput="markDirty()">
+          </div>
+          <div class="fg">
+            <label class="fl">Denetim No</label>
+            <input class="fi" id="f_denetim_no" placeholder="AB-XXXX" oninput="markDirty()">
+          </div>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:10px">
+        <label class="fl">Muayene Yapılan Kuruluş Ve Adresi</label>
+        <textarea class="fi" id="f_muayene_kurulusu" placeholder="Kuruluş adı ve adresi..." oninput="markDirty()"></textarea>
+      </div>
+      <div class="divider"><div class="divider-line"></div><span class="divider-text">Tanık Olunan / Witnessed</span><div class="divider-line"></div></div>
+      <div class="fgrid" style="margin-bottom:10px">
+        <div class="fg">
+          <label class="fl">Muayene Alanı ve Türü</label>
+          <input class="fi" id="f_muayene_alani" placeholder="Muayene alanı..." oninput="markDirty()">
+        </div>
+        <div class="fg">
+          <label class="fl">Kapsam Genişletme / Scope Extension</label>
+          <input class="fi" id="f_kapsam" placeholder="Varsa belirtin..." oninput="markDirty()">
+        </div>
+      </div>
+      <div class="fgrid">
+        <div class="fg">
+          <label class="fl">Muayene Personeli / Witnessed Inspector</label>
+          <input class="fi" id="f_personel" placeholder="Personel adı..." oninput="markDirty()">
+        </div>
+        <div class="fg">
+          <label class="fl">Standartlar / Dokümanlar / Rev.No</label>
+          <input class="fi" id="f_standartlar" placeholder="ISO 17020:2012..." oninput="markDirty()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KONTROL KRİTERLERİ -->
+  <div class="kart">
+    <div class="kart-header">
+      <div>
+        <div class="kart-title">Denetim Kontrol Kriterleri</div>
+        <div class="kart-sub">ISO/IEC 17020 · 15 kriter</div>
+      </div>
+    </div>
+    <div class="tbl-header">
+      <div class="th">Kontrol Kriteri</div>
+      <div class="th c">Durum *</div>
+      <div class="th">İlgili Kayıtlar / Yorum</div>
+    </div>
+    <div id="kontrol-rows"></div>
+  </div>
+
+  <!-- GENEL DEĞERLENDİRME -->
+  <div class="kart">
+    <div class="kart-header"><div class="kart-title">Genel Değerlendirme / Overall Evaluation</div></div>
+    <div class="kart-body">
+      <div style="background:#f0ede6;border-radius:10px;padding:10px 12px;font-size:11.5px;color:var(--mid);line-height:1.5;margin-bottom:1rem;border-left:3px solid var(--accent)">
+        Muayene personelinin izlenebilirlik/kalibrasyon bilgi seviyesi, muayene sürelerinin gerçeğe uygunluğu ve bulguların sınıflandırılması bu bölümde değerlendirilebilir.
+      </div>
+      <textarea class="fi" id="f_genel" placeholder="Genel değerlendirme notlarınızı yazın..." style="min-height:120px" oninput="markDirty()"></textarea>
+    </div>
+  </div>
+
+  <!-- İMZALAR -->
+  <div class="kart">
+    <div class="kart-header"><div class="kart-title">İmzalar / Signatures</div></div>
+    <div class="imza-grid">
+      <div class="imza-col">
+        <div class="imza-title">🔬 Teknik Uzman / Technical Expert</div>
+        <div class="fg" style="margin-bottom:8px"><label class="fl">Adı Soyadı</label><input class="fi" id="f_uzman_ad" placeholder="Ad Soyad..." oninput="markDirty()"></div>
+        <div class="fg" style="margin-bottom:8px"><label class="fl">Tarih</label><input class="fi" id="f_uzman_tarih" type="date" oninput="markDirty()"></div>
+        <label class="fl" style="display:block;margin-bottom:6px">İmza</label>
+        <div class="sig-wrap" id="wrap-uzman"><canvas class="sig" id="sig-uzman"></canvas><span class="sig-ph" id="ph-uzman">✍️ İmzalayın</span></div>
+        <button class="sig-clear" onclick="clearSig('uzman')">× Temizle</button>
+      </div>
+      <div class="imza-col">
+        <div class="imza-title">📋 Ekip Lideri / Denetçi</div>
+        <div class="fg" style="margin-bottom:8px"><label class="fl">Adı Soyadı</label><input class="fi" id="f_denetci_ad" placeholder="Ad Soyad..." oninput="markDirty()"></div>
+        <div class="fg" style="margin-bottom:8px"><label class="fl">Tarih</label><input class="fi" id="f_denetci_tarih" type="date" oninput="markDirty()"></div>
+        <label class="fl" style="display:block;margin-bottom:6px">İmza</label>
+        <div class="sig-wrap" id="wrap-denetci"><canvas class="sig" id="sig-denetci"></canvas><span class="sig-ph" id="ph-denetci">✍️ İmzalayın</span></div>
+        <button class="sig-clear" onclick="clearSig('denetci')">× Temizle</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="notlar">
+    <p><strong style="color:var(--green)">Y:</strong> Yeterli &nbsp;|&nbsp; <strong style="color:var(--red)">YD:</strong> Yeterli Değil &nbsp;|&nbsp; <strong style="color:var(--gray)">UD:</strong> Uygulanabilir Değil</p>
+    <p><strong>T:</strong> Tanık &nbsp;|&nbsp; <strong>M:</strong> Mülakat &nbsp;|&nbsp; <strong>K:</strong> Kayıt İnceleme &nbsp;|&nbsp; <strong>Ö:</strong> Ölçüm</p>
+    <p style="margin-top:4px">⚠️ Bu form ile ilgili kayıtlar e-TÜRKAK portalına yüklenmelidir. · F701-056/rev03/0119</p>
+  </div>
+</div>
+
+<!-- ALT BAR -->
+<div class="ozet-bar">
+  <div class="ozet-counts">
+    <div class="ozet-item"><div class="dot y"></div><span id="cnt-y">0</span> Y</div>
+    <div class="ozet-item"><div class="dot yd"></div><span id="cnt-yd">0</span> YD</div>
+    <div class="ozet-item"><div class="dot ud"></div><span id="cnt-ud">0</span> UD</div>
+  </div>
+  <div class="save-btns">
+    <button class="btn btn-gray" onclick="openKlasörSec()">📁 Klasör</button>
+    <button class="btn btn-fire" onclick="openSaveMod()">💾 Kaydet</button>
+  </div>
+</div>
+
+<!-- ══ MODAL: KAYITLAR ══ -->
+<div class="modal-overlay" id="modal-kayitlar" onclick="closeOnBg(event,'modal-kayitlar')">
+  <div class="modal-sheet">
+    <div class="modal-head">
+      <span class="modal-head-title">📂 Kayıtlı Formlar</span>
+      <button class="modal-close" onclick="closeM('modal-kayitlar')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input class="search-input" id="kayit-search" placeholder="Kuruluş adı veya denetim no ara..." oninput="filterKayitlar()">
+      <div class="kayit-filters">
+        <button class="filter-btn active" onclick="setFilter('hepsi',this)">Hepsi</button>
+        <button class="filter-btn" onclick="setFilter('bu-ay',this)">Bu Ay</button>
+        <button class="filter-btn" onclick="setFilter('yd-var',this)">YD Olanlar</button>
+      </div>
+      <div id="kayit-klasor-filter" style="margin-bottom:.75rem;font-size:11px;color:var(--mid)">
+        Klasör: <span id="aktif-klasor-label" style="color:var(--accent);font-weight:600">Tümü</span>
+        <button onclick="setKlasorFilter(null)" style="background:none;border:none;color:var(--accent2);cursor:pointer;font-size:11px;margin-left:6px">× Tümünü göster</button>
+      </div>
+      <div id="kayit-liste"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: KAYDET MOD ══ -->
+<div class="modal-overlay" id="modal-save-mod" onclick="closeOnBg(event,'modal-save-mod')">
+  <div class="save-mod-sheet">
+    <div class="modal-head">
+      <span class="modal-head-title">💾 Nasıl Kaydedilsin?</span>
+      <button class="modal-close" onclick="closeM('modal-save-mod')">✕</button>
+    </div>
+    <div id="save-mod-content"></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: KLASÖR SEÇ ══ -->
+<div class="modal-overlay" id="modal-klasor" onclick="closeOnBg(event,'modal-klasor')">
+  <div class="modal-sheet">
+    <div class="modal-head">
+      <span class="modal-head-title">📁 NAS Klasörü Seç</span>
+      <button class="modal-close" onclick="closeM('modal-klasor')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--mid);margin-bottom:1rem">Raporların kaydedileceği NAS klasörünü seçin. Raspberry Pi bu klasöre Word dosyasını oluşturacak.</p>
+      <div class="klasor-list" id="klasor-list"></div>
+      <div class="new-klasor-row">
+        <input class="new-klasor-input" id="new-klasor-input" placeholder="Klasör adı (ör: 2026-Q2)">
+      </div>
+      <div class="new-klasor-row" style="margin-top:6px">
+        <input class="new-klasor-input" id="new-klasor-yol" placeholder="\\\\NAS\\Denetim\\2026-Q2" style="font-family:monospace;font-size:12px">
+        <button class="btn btn-accent" onclick="addKlasor()">+ Ekle</button>
+      </div>
+      <div style="font-size:11px;color:var(--mid);margin-top:6px">
+        💡 Ör: <code style="background:#f0ede6;padding:2px 6px;border-radius:4px">\\NAS\Denetim\2026</code> &nbsp;veya&nbsp; <code style="background:#f0ede6;padding:2px 6px;border-radius:4px">\\192.168.1.100\Denetim</code>
+      </div>
+      <button class="btn btn-green" style="width:100%;margin-top:1rem" onclick="saveKlasorSec()">✅ Seçimi Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// ⚙️ FİREBASE YAPILANDIRMASI
+// ══════════════════════════════════════
+const firebaseConfig = {
+  apiKey:            "AIzaSyBP3RnxoIEsG823z-RKKbEA9I7etjGPIas",
+  authDomain:        "turkak-tanik-denetim.firebaseapp.com",
+  projectId:         "turkak-tanik-denetim",
+  storageBucket:     "turkak-tanik-denetim.firebasestorage.app",
+  messagingSenderId: "421430501390",
+  appId:             "1:421430501390:web:7dadb8cd6d86de2e64dc5f"
+};
+
+let db = null, firebaseReady = false;
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  db.collection('tanik_denetim').limit(1).get()
+    .then(()=>{ firebaseReady=true; updateFileBar(); loadKayitlar(); })
+    .catch(()=>{ updateFileBar(); });
+} catch(e){ updateFileBar(); }
+
+// ══════════════════════════════════════
+// DURUM
+// ══════════════════════════════════════
+let currentDocId  = null;   // Firebase doc ID
+let currentKlasor = localStorage.getItem('aktifKlasor') || '\\\\NAS\\Denetim';
+let isDirty       = false;
+let kayitlarCache = [];
+let aktifFilter   = 'hepsi';
+let klasorFilter  = null;
+
+const KLASORLER_KEY = 'nasKlasorler';
+function getKlasorler() {
+  try { return JSON.parse(localStorage.getItem(KLASORLER_KEY)) || defaultKlasorler(); }
+  catch(e) { return defaultKlasorler(); }
+}
+function defaultKlasorler() {
+  return [
+    { ad:'Denetim (Genel)',  yol:'\\\\NAS\\Denetim' },
+    { ad:'2026',             yol:'\\\\NAS\\Denetim\\2026' },
+    { ad:'2026 - Q1',        yol:'\\\\NAS\\Denetim\\2026\\Q1' },
+    { ad:'Arşiv',            yol:'\\\\NAS\\Denetim\\Arsiv' },
+  ];
+}
+function saveKlasorler(list) { localStorage.setItem(KLASORLER_KEY, JSON.stringify(list)); }
+
+// ══════════════════════════════════════
+// DOSYA DURUM BARI
+// ══════════════════════════════════════
+function updateFileBar() {
+  const pathEl   = document.getElementById('file-bar-path');
+  const statusEl = document.getElementById('file-bar-status');
+  const kab      = document.getElementById('f_kab_adi')?.value;
+  const klasorAd = getKlasorler().find(k=>k.yol===currentKlasor)?.ad || '?';
+
+  if(!currentDocId) {
+    pathEl.innerHTML = `📁 <strong>${klasorAd}</strong> / Yeni form`;
+    statusEl.className = 'file-bar-status fbs-new';
+    statusEl.textContent = 'Yeni';
+  } else if(isDirty) {
+    pathEl.innerHTML = `📁 <strong>${klasorAd}</strong> / ${kab||'Form'}`;
+    statusEl.className = 'file-bar-status fbs-dirty';
+    statusEl.textContent = '● Kaydedilmedi';
+  } else {
+    pathEl.innerHTML = `📁 <strong>${klasorAd}</strong> / ${kab||'Form'}`;
+    statusEl.className = 'file-bar-status fbs-saved';
+    statusEl.textContent = '✓ Kaydedildi';
+  }
+
+  if(!firebaseReady) {
+    statusEl.className = 'file-bar-status fbs-sync';
+    statusEl.textContent = firebaseConfig.apiKey==='BURAYA_API_KEY' ? '⚙️ Yapılandır' : '⏳ Bağlanıyor';
+  }
+}
+
+function markDirty() { isDirty = true; updateFileBar(); }
+
+// ══════════════════════════════════════
+// KONTROL SATIRLARI
+// ══════════════════════════════════════
+const satirlar = [
+  {id:'s1', teknik:'M, K',    madde:'7.1.5',        tr:'Müşteriyle Yapılan Sözleşme Ve Tanımlanan Şartlar',                          en:'Contracts With Customers And Its Conditions'},
+  {id:'s2', teknik:'M, K',    madde:'7.1.5',        tr:'İş Emri Sistemi (Muayene Personelinin Görevlendirilmesi)',                    en:'Work Order System'},
+  {id:'s3', teknik:'M, T',    madde:'7.1.4',        tr:'Muayene Personelinin İlgili Standart Ve Dokümanlara Erişimi',                 en:'Access of Inspectors to Relevant Standards'},
+  {id:'s4', teknik:'M, T, K', madde:'7.1.9',        tr:'Gerekli Güvenlik/Emniyet Tedbirleri',                                        en:'Necessary Measures for Safety'},
+  {id:'s5', teknik:'M, T, K', madde:'7.1.2',        tr:'Numune Alma Metodu',                                                          en:'Method on Sampling'},
+  {id:'s6', teknik:'M, T',    madde:'7.1.6',        tr:'Muayene Prosesi İle İlişkili Üçüncü Taraflarca Sağlanan Bilgilerin Tamlığının Doğrulanması', en:'Verifying Integrity of Information From Third Parties'},
+  {id:'s7', teknik:'M, T',    madde:'7.2',          tr:'Muayene Edilecek Hizmet, Proses veya Ürünün Muayeneye Uygunluğu',            en:'Suitability Of Product/Process for Inspection'},
+  {id:'s8', teknik:'K',       madde:'7.2',          tr:'Muayene Edilecek Hizmet, Proses veya Ürünün Bozulması/Hasar Görmesi İçin Alınan Önlemler', en:'Measures Against Deterioration Or Damage'},
+  {id:'s9', teknik:'M, T, K', madde:'6.2',          tr:'Kullanılan Cihaz/Ekipman ve Kodu',                                           en:'Equipment Used with Code'},
+  {id:'s10',teknik:'M, T, K', madde:'6.2',          tr:'Muayene Öncesi Kullanılacak Cihazların Uygunluğunun Kontrolü',               en:'Control of Appropriateness of Equipment'},
+  {id:'s11',teknik:'T',       madde:'6.1.12',       tr:'Muayene Personelinin Tarafsızlığı',                                          en:'Impartiality Of Inspectors'},
+  {id:'s12',teknik:'M, T',    madde:'6.1.3',        tr:'Muayene Personelinin Muayene Ettiği Ürün/Hizmet/Proses Hakkındaki Yetkinliği ve Bilgi Birikimi', en:'Knowledge And Competence Of Inspector'},
+  {id:'s13',teknik:'T, K',    madde:'7.1.7, 7.3',  tr:'Bilgi ve Gözlemleri Zamanında Kayıt Altına Alma',                            en:'Recording Of Data And Observations In Time'},
+  {id:'s14',teknik:'M, K',    madde:'7.3, R50.01',  tr:'Muayene Kayıtlarının Yeterli İçerikte Oluşturulması',                        en:'Establishment of Examination Records in Sufficient Content'},
+  {id:'s15',teknik:'M, K',    madde:'7.4.2, R50.01',tr:'Muayene Sonuçlarının Kaydedilmesi, Raporlanması / Uygunluk İfadesi',         en:'Recording & Reporting Results / Declaration Of Conformity'},
+];
+
+const state = {};
+satirlar.forEach(s => { state[s.id] = {durum:'', yorum:''}; });
+
+function renderRows() {
+  document.getElementById('kontrol-rows').innerHTML = satirlar.map(s=>`
+    <div class="kontrol-row">
+      <div>
+        <div class="kmadde">${s.madde} <span style="font-weight:400;color:var(--mid)">· ${s.teknik}</span></div>
+        <div class="ktext">${s.tr}</div>
+        <div class="ktext-en">${s.en}</div>
+      </div>
+      <div>
+        <select class="durum-select val-${state[s.id].durum}" id="dur-${s.id}" onchange="setDurum('${s.id}',this)">
+          <option value="">— Seç</option>
+          <option value="Y"  ${state[s.id].durum==='Y' ?'selected':''}>✓ Y — Yeterli</option>
+          <option value="YD" ${state[s.id].durum==='YD'?'selected':''}>✗ YD — Yeterli Değil</option>
+          <option value="UD" ${state[s.id].durum==='UD'?'selected':''}>— UD — Uygulanamaz</option>
+        </select>
+      </div>
+      <div>
+        <textarea class="yorum-input ${state[s.id].durum==='YD'?'yd':''}" id="yor-${s.id}"
+          placeholder="İlgili kayıtlar ve/veya yorum..."
+          oninput="state['${s.id}'].yorum=this.value;markDirty()"
+        >${state[s.id].yorum}</textarea>
+      </div>
+    </div>
+  `).join('');
+  updateCounts();
+}
+
+function setDurum(id, sel) {
+  state[id].durum = sel.value;
+  sel.className = `durum-select val-${sel.value}`;
+  const yor = document.getElementById('yor-'+id);
+  if(yor) { yor.className=`yorum-input ${sel.value==='YD'?'yd':''}`; if(sel.value==='YD') yor.focus(); }
+  updateCounts(); markDirty();
+}
+
+function updateCounts() {
+  document.getElementById('cnt-y').textContent  = Object.values(state).filter(s=>s.durum==='Y').length;
+  document.getElementById('cnt-yd').textContent = Object.values(state).filter(s=>s.durum==='YD').length;
+  document.getElementById('cnt-ud').textContent = Object.values(state).filter(s=>s.durum==='UD').length;
+}
+
+// ══════════════════════════════════════
+// İMZA
+// ══════════════════════════════════════
+const sigs = {};
+function initSig(name) {
+  const canvas = document.getElementById('sig-'+name);
+  const wrap   = canvas.parentElement;
+  canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle='#1a1a2e'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.lineJoin='round';
+  let drawing=false, drawn=false;
+  const pos = e => { const r=canvas.getBoundingClientRect(),t=e.touches?e.touches[0]:e; return {x:(t.clientX-r.left)*(canvas.width/r.width),y:(t.clientY-r.top)*(canvas.height/r.height)}; };
+  canvas.addEventListener('mousedown', e=>{drawing=true;ctx.beginPath();const p=pos(e);ctx.moveTo(p.x,p.y)});
+  canvas.addEventListener('mousemove', e=>{if(!drawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();drawn=true;hidePh()});
+  canvas.addEventListener('mouseup',   ()=>{drawing=false;if(drawn)markDirty()});
+  canvas.addEventListener('mouseleave',()=>{drawing=false});  // Desktop: canvas dışına çıkınca dur
+  canvas.addEventListener('touchstart', e=>{e.preventDefault();drawing=true;ctx.beginPath();const p=pos(e);ctx.moveTo(p.x,p.y)},{passive:false});
+  canvas.addEventListener('touchmove', e=>{e.preventDefault();if(!drawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();drawn=true;hidePh()},{passive:false});
+  canvas.addEventListener('touchend', ()=>{drawing=false;markDirty()});
+  function hidePh(){document.getElementById('ph-'+name).style.opacity='0'}
+  sigs[name]={canvas,ctx,isDrawn:()=>drawn,reset:()=>{drawn=false;document.getElementById('ph-'+name).style.opacity='1'}};
+}
+function clearSig(name){const{canvas,ctx,reset}=sigs[name];ctx.clearRect(0,0,canvas.width,canvas.height);reset();markDirty()}
+function getSigData(name){const{canvas,isDrawn}=sigs[name];return isDrawn()?canvas.toDataURL('image/png'):null}
+
+// ══════════════════════════════════════
+// VERİ
+// ══════════════════════════════════════
+function syncYorumlar(){satirlar.forEach(s=>{const el=document.getElementById('yor-'+s.id);if(el)state[s.id].yorum=el.value})}
+
+function collectData() {
+  syncYorumlar();
+  return {
+    kab_adi:          document.getElementById('f_kab_adi').value,
+    tarih:            document.getElementById('f_tarih').value,
+    denetim_no:       document.getElementById('f_denetim_no').value,
+    muayene_kurulusu: document.getElementById('f_muayene_kurulusu').value,
+    muayene_alani:    document.getElementById('f_muayene_alani').value,
+    kapsam:           document.getElementById('f_kapsam').value,
+    personel:         document.getElementById('f_personel').value,
+    standartlar:      document.getElementById('f_standartlar').value,
+    genel:            document.getElementById('f_genel').value,
+    uzman_ad:         document.getElementById('f_uzman_ad').value,
+    uzman_tarih:      document.getElementById('f_uzman_tarih').value,
+    denetci_ad:       document.getElementById('f_denetci_ad').value,
+    denetci_tarih:    document.getElementById('f_denetci_tarih').value,
+    sig_uzman:        getSigData('uzman'),
+    sig_denetci:      getSigData('denetci'),
+    nas_klasor:       currentKlasor,
+    satirlar: satirlar.map(s=>({id:s.id,madde:s.madde,teknik:s.teknik,tr:s.tr,en:s.en,durum:state[s.id].durum,yorum:state[s.id].yorum})),
+    ozet: { Y:Object.values(state).filter(s=>s.durum==='Y').length, YD:Object.values(state).filter(s=>s.durum==='YD').length, UD:Object.values(state).filter(s=>s.durum==='UD').length },
+    updated_at: new Date().toISOString(),
+    form_no: 'F701-056',
+  };
+}
+
+function fillForm(data) {
+  const ids = ['f_kab_adi','f_tarih','f_denetim_no','f_muayene_kurulusu','f_muayene_alani','f_kapsam','f_personel','f_standartlar','f_genel','f_uzman_ad','f_uzman_tarih','f_denetci_ad','f_denetci_tarih'];
+  const keys= ['kab_adi','tarih','denetim_no','muayene_kurulusu','muayene_alani','kapsam','personel','standartlar','genel','uzman_ad','uzman_tarih','denetci_ad','denetci_tarih'];
+  ids.forEach((id,i)=>{ const el=document.getElementById(id); if(el) el.value=data[keys[i]]||''; });
+  if(data.nas_klasor) currentKlasor = data.nas_klasor;
+  if(data.satirlar) data.satirlar.forEach(s=>{ if(state[s.id]){state[s.id].durum=s.durum||'';state[s.id].yorum=s.yorum||''} });
+  renderRows();
+}
+
+// ══════════════════════════════════════
+// KAYDET MOD
+// ══════════════════════════════════════
+function openSaveMod() {
+  const data = collectData();
+  if(!data.kab_adi) { showToast('⚠️ Kuruluş adı boş olamaz!'); return; }
+  const klasorAd = getKlasorler().find(k=>k.yol===currentKlasor)?.ad || currentKlasor;
+  const content = document.getElementById('save-mod-content');
+
+  if(currentDocId) {
+    // Mevcut kayıt var → üzerine veya farklı kaydet
+    content.innerHTML = `
+      <div class="save-mod-option" onclick="saveUzerine()">
+        <div class="smo-icon">💾</div>
+        <div>
+          <div class="smo-title">Üzerine Kaydet</div>
+          <div class="smo-desc">Mevcut kaydın üzerine yaz. Eski veriler silinir.</div>
+        </div>
+        <span class="smo-badge over">Üzerine yaz</span>
+      </div>
+      <div class="save-mod-option" onclick="saveFarkli()">
+        <div class="smo-icon">📄</div>
+        <div>
+          <div class="smo-title">Farklı Kaydet</div>
+          <div class="smo-desc">Yeni kayıt olarak oluştur. Mevcut kayıt da kalır.</div>
+        </div>
+        <span class="smo-badge new">Yeni kayıt</span>
+      </div>
+      <div class="save-mod-option" onclick="saveKlasorde()">
+        <div class="smo-icon">📁</div>
+        <div>
+          <div class="smo-title">Farklı Klasöre Kaydet</div>
+          <div class="smo-desc">Klasör seç, sonra yeni kayıt oluştur.</div>
+        </div>
+        <span class="smo-badge new" style="background:rgba(30,58,95,.1);color:var(--accent)">Klasör seç</span>
+      </div>
+      <div style="padding:.75rem 1.25rem;font-size:11px;color:var(--mid);border-top:1px solid var(--border)">
+        📁 Hedef klasör: <strong style="color:var(--accent)">${klasorAd}</strong> → ${currentKlasor}
+      </div>
+    `;
+  } else {
+    // Yeni form → direkt kaydet
+    content.innerHTML = `
+      <div class="save-mod-option" onclick="saveYeni()">
+        <div class="smo-icon">☁️</div>
+        <div>
+          <div class="smo-title">Firebase'e Kaydet</div>
+          <div class="smo-desc">Formu Firebase'e kaydeder. Raspberry Pi Word dosyasını oluşturacak.</div>
+        </div>
+        <span class="smo-badge new">Kaydet</span>
+      </div>
+      <div class="save-mod-option" onclick="saveKlasorde()">
+        <div class="smo-icon">📁</div>
+        <div>
+          <div class="smo-title">Klasör Seçerek Kaydet</div>
+          <div class="smo-desc">Önce hedef NAS klasörünü seç, sonra kaydet.</div>
+        </div>
+        <span class="smo-badge new" style="background:rgba(30,58,95,.1);color:var(--accent)">Klasör seç</span>
+      </div>
+      <div style="padding:.75rem 1.25rem;font-size:11px;color:var(--mid);border-top:1px solid var(--border)">
+        📁 Hedef klasör: <strong style="color:var(--accent)">${klasorAd}</strong> → ${currentKlasor}
+      </div>
+    `;
+  }
+
+  openM('modal-save-mod');
+}
+
+async function saveUzerine() {
+  closeM('modal-save-mod');
+  await doSave(currentDocId);
+}
+
+async function saveFarkli() {
+  closeM('modal-save-mod');
+  currentDocId = null;
+  await doSave(null);
+}
+
+async function saveKlasorde() {
+  closeM('modal-save-mod');
+  openKlasörSec(true); // true = kaydet modunda aç
+}
+
+async function saveYeni() {
+  closeM('modal-save-mod');
+  await doSave(null);
+}
+
+let saveAfterKlasor = false;
+function openKlasörSec(afterSave=false) {
+  saveAfterKlasor = afterSave;
+  renderKlasorList();
+  openM('modal-klasor');
+}
+
+async function doSave(docId) {
+  const data = collectData();
+  if(!firebaseReady) {
+    showToast('⚠️ Firebase yapılandırılmadı!');
+    console.log('Kaydedilecek veri:', data);
+    return;
+  }
+  updateFileBarSyncing();
+
+  // Word alanlarını her zaman sıfırla → Pi yeniden üretsin
+  data.word_olusturuldu = null;
+  data.word_dosyasi     = null;
+  data.word_durum       = 'bekliyor';
+  data.word_nas_yolu    = null;
+
+  try {
+    if(docId) {
+      await db.collection('tanik_denetim').doc(docId).set(data);
+      showToast('✅ Güncellendi — Word yeniden üretilecek');
+    } else {
+      const ref = await db.collection('tanik_denetim').add(data);
+      currentDocId = ref.id;
+      showToast('✅ Kaydedildi — Word üretiliyor');
+    }
+    isDirty = false;
+    updateFileBar();
+    loadKayitlar();
+    startPolling();
+  } catch(e) {
+    showToast('❌ Hata: ' + e.message);
+    updateFileBar();
+  }
+}
+
+function updateFileBarSyncing() {
+  const s = document.getElementById('file-bar-status');
+  s.className = 'file-bar-status fbs-sync';
+  s.textContent = '⏳ Kaydediyor...';
+}
+
+// ══════════════════════════════════════
+// KLASÖR YÖNETİMİ
+// ══════════════════════════════════════
+let tempKlasor = null;
+
+function renderKlasorList() {
+  tempKlasor = currentKlasor;
+  const list = getKlasorler();
+  document.getElementById('klasor-list').innerHTML = list.map((k,i) => `
+    <div class="klasor-item ${k.yol===tempKlasor?'selected':''}" onclick="selectKlasor('${k.yol}',${i})">
+      <div class="klasor-icon">📁</div>
+      <div style="flex:1;min-width:0">
+        <div class="klasor-name">${k.ad}</div>
+        <div class="klasor-path">${k.yol}</div>
+      </div>
+      <span class="klasor-check">✓</span>
+      <button onclick="event.stopPropagation();deleteKlasor(${i})" 
+        style="background:none;border:none;color:var(--mid);cursor:pointer;padding:4px;font-size:14px">🗑️</button>
+    </div>
+  `).join('');
+}
+
+function selectKlasor(yol, idx) {
+  tempKlasor = yol;
+  document.querySelectorAll('.klasor-item').forEach((el,i) => {
+    el.classList.toggle('selected', i===idx);
+  });
+}
+
+function addKlasor() {
+  const input   = document.getElementById('new-klasor-input');
+  const yolInput= document.getElementById('new-klasor-yol');
+  const ad  = input.value.trim();
+  const yol = yolInput.value.trim();
+  if(!ad)  { showToast('⚠️ Klasör adı girin'); return; }
+  if(!yol) { showToast('⚠️ Klasör yolu girin'); return; }
+  // Basit format kontrolü
+  if(!yol.startsWith('\\\\') && !yol.startsWith('//')) {
+    showToast('⚠️ Yol \\\\NAS\\Klasor formatında olmalı'); return;
+  }
+  const list = getKlasorler();
+  list.push({ ad, yol });
+  saveKlasorler(list);
+  input.value = ''; yolInput.value = '';
+  renderKlasorList();
+  showToast('📁 Klasör eklendi');
+}
+
+function deleteKlasor(idx) {
+  const list = getKlasorler();
+  if(list.length <= 1) { showToast('⚠️ En az bir klasör olmalı'); return; }
+  list.splice(idx, 1);
+  saveKlasorler(list);
+  if(!list.find(k=>k.yol===tempKlasor)) tempKlasor = list[0].yol;
+  renderKlasorList();
+}
+
+function saveKlasorSec() {
+  currentKlasor = tempKlasor;
+  localStorage.setItem('aktifKlasor', currentKlasor);
+  document.getElementById('aktif-klasor-label').textContent =
+    getKlasorler().find(k=>k.yol===currentKlasor)?.ad || currentKlasor;
+  closeM('modal-klasor');
+  updateFileBar();
+  if(saveAfterKlasor) {
+    saveAfterKlasor = false;
+    setTimeout(()=>doSave(null), 200);
+  } else {
+    showToast('📁 Klasör seçildi');
+  }
+}
+
+// ══════════════════════════════════════
+// KAYIT LİSTESİ
+// ══════════════════════════════════════
+async function loadKayitlar() {
+  if(!firebaseReady) return;
+  try {
+    const snap = await db.collection('tanik_denetim').orderBy('updated_at','desc').limit(50).get();
+    kayitlarCache = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderKayitlar();
+    // Bekleyen Word varsa polling başlat
+    const bekleyen = kayitlarCache.some(k=>!k.word_olusturuldu && !k.word_durum?.startsWith('hata'));
+    if(bekleyen) startPolling(); else stopPolling();
+  } catch(e) { console.log('Kayıtlar yüklenemedi:',e); }
+}
+
+let aktifFilterBtn = null;
+function setFilter(f, btn) {
+  aktifFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderKayitlar();
+}
+
+function setKlasorFilter(yol) {
+  klasorFilter = yol;
+  document.getElementById('aktif-klasor-label').textContent =
+    yol ? (getKlasorler().find(k=>k.yol===yol)?.ad || yol) : 'Tümü';
+  renderKayitlar();
+}
+
+function filterKayitlar() { renderKayitlar(); }
+
+function renderKayitlar() {
+  const el     = document.getElementById('kayit-liste');
+  const arama  = document.getElementById('kayit-search')?.value?.toLowerCase() || '';
+  const buAy   = new Date().toISOString().substring(0,7);
+
+  let liste = kayitlarCache.filter(k => {
+    if(arama && !`${k.kab_adi||''} ${k.denetim_no||''}`.toLowerCase().includes(arama)) return false;
+    if(aktifFilter==='bu-ay'  && !k.tarih?.startsWith(buAy)) return false;
+    if(aktifFilter==='yd-var' && !(k.ozet?.YD > 0)) return false;
+    if(klasorFilter && k.nas_klasor !== klasorFilter) return false;
+    return true;
+  });
+
+  if(!liste.length) {
+    el.innerHTML = '<p style="color:var(--mid);font-size:13px;text-align:center;padding:2rem 0">Kayıt bulunamadı</p>';
+    return;
+  }
+
+  // Klasörlere göre grupla
+  const gruplar = {};
+  liste.forEach(k => {
+    const klasorAd = getKlasorler().find(x=>x.yol===k.nas_klasor)?.ad || k.nas_klasor || 'Genel';
+    if(!gruplar[klasorAd]) gruplar[klasorAd] = [];
+    gruplar[klasorAd].push(k);
+  });
+
+  el.innerHTML = Object.entries(gruplar).map(([grupAd, kayitlar]) => `
+    <div style="margin-bottom:1rem">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mid);margin-bottom:6px;cursor:pointer"
+        onclick="setKlasorFilter(kayitlar[0]?.nas_klasor)">
+        📁 ${grupAd} <span style="font-weight:400">(${kayitlar.length})</span>
+      </div>
+      ${kayitlar.map(k => {
+        // Word durumu badge
+        let wordBadge = '';
+        if(k.word_olusturuldu) {
+          wordBadge = `<span class="word-badge wb-ok">📄 Word hazır</span>`;
+        } else if(k.word_durum?.startsWith('hata')) {
+          wordBadge = `<span class="word-badge wb-err">⚠️ Hata</span>`;
+        } else {
+          wordBadge = `<span class="word-badge wb-wait">⏳ Bekliyor</span>`;
+        }
+        return `
+        <div class="kayit-item ${k.id===currentDocId?'active-record':''}" onclick="loadKayit('${k.id}')">
+          <div class="kayit-icon">${k.id===currentDocId?'📋':'📄'}</div>
+          <div class="kayit-info">
+            <div class="kayit-ad">${k.kab_adi||'İsimsiz'}</div>
+            <div class="kayit-meta">${k.tarih||'—'} · ${k.denetim_no||'—'}</div>
+            <div class="kayit-klasor">${k.nas_klasor||''}</div>
+          </div>
+          <div class="kayit-right">
+            ${wordBadge}
+            <div class="kayit-ozet">
+              <span style="font-size:11px;color:var(--green);font-weight:600">Y:${k.ozet?.Y||0}</span>
+              <span style="font-size:11px;color:var(--red);font-weight:600">YD:${k.ozet?.YD||0}</span>
+            </div>
+            <div class="kayit-actions" onclick="event.stopPropagation()">
+              <button class="kayit-act-btn" onclick="loadKayit('${k.id}')">📂 Aç</button>
+              <button class="kayit-act-btn" onclick="duplicateKayit('${k.id}')">📋 Kopyala</button>
+              <button class="kayit-act-btn del" onclick="deleteKayit('${k.id}')">🗑️</button>
+            </div>
+          </div>
+        </div>
+      `}).join('')}
+    </div>
+  `).join('');
+}
+
+async function loadKayit(id) {
+  if(isDirty && !confirm('Kaydedilmemiş değişiklikler var. Yine de yüklensin mi?')) return;
+  const k = kayitlarCache.find(x=>x.id===id);
+  if(k) {
+    fillForm(k);
+    currentDocId = id;
+    isDirty = false;
+    updateFileBar();
+    closeM('modal-kayitlar');
+    showToast('📂 Form yüklendi');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+}
+
+async function duplicateKayit(id) {
+  if(isDirty && !confirm('Kaydedilmemiş değişiklikler var. Yine de kopyalanacak kayıt yüklensin mi?')) return;
+  const k = kayitlarCache.find(x=>x.id===id);
+  if(k) {
+    fillForm(k);
+    currentDocId = null; // Yeni kayıt olacak
+    isDirty = true;
+    // Denetim numarasına KOPYA ekle
+    const no = document.getElementById('f_denetim_no');
+    if(no) no.value = (no.value||'') + '-KOPYA';
+    updateFileBar();
+    closeM('modal-kayitlar');
+    showToast('📋 Kopyalandı — Farklı kaydet ile yeni oluşturun');
+  }
+}
+
+async function deleteKayit(id) {
+  if(!confirm('Bu kaydı silmek istediğinize emin misiniz?\nBu işlem geri alınamaz.')) return;
+  if(!firebaseReady) { showToast('⚠️ Firebase bağlı değil'); return; }
+  await db.collection('tanik_denetim').doc(id).delete();
+  if(currentDocId===id) yeniForm();
+  showToast('🗑️ Kayıt silindi');
+  loadKayitlar();
+}
+
+function yeniForm() {
+  if(isDirty && !confirm('Kaydedilmemiş değişiklikler var. Yine de sıfırlanacak?')) return;
+  currentDocId = null; isDirty = false;
+  satirlar.forEach(s=>{ state[s.id]={durum:'',yorum:''} });
+  ['f_kab_adi','f_muayene_kurulusu','f_muayene_alani','f_kapsam','f_personel',
+   'f_standartlar','f_genel','f_uzman_ad','f_denetci_ad','f_denetim_no'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  const today=new Date().toISOString().split('T')[0];
+  ['f_tarih','f_uzman_tarih','f_denetci_tarih'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=today; });
+  clearSig('uzman'); clearSig('denetci');
+  renderRows(); updateFileBar();
+  showToast('📄 Yeni form hazır');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ══════════════════════════════════════
+// CANLI POLLING — Word hazır olunca güncelle
+// ══════════════════════════════════════
+let pollingInterval = null;
+
+function startPolling() {
+  if(pollingInterval) return;
+  pollingInterval = setInterval(async () => {
+    if(!firebaseReady) return;
+    const bekleyenler = kayitlarCache.filter(k => !k.word_olusturuldu && !k.word_durum?.startsWith('hata'));
+    if(!bekleyenler.length) { stopPolling(); return; }
+    try {
+      for(const k of bekleyenler) {
+        const snap = await db.collection('tanik_denetim').doc(k.id).get();
+        const fresh = snap.data();
+        if(fresh?.word_olusturuldu) {
+          // Cache güncelle
+          const idx = kayitlarCache.findIndex(x=>x.id===k.id);
+          if(idx>=0) kayitlarCache[idx] = { id:k.id, ...fresh };
+          renderKayitlar();
+          showToast(`📄 Word hazır: ${fresh.word_dosyasi || 'dosya oluşturuldu'}`);
+        }
+      }
+    } catch(e) {}
+  }, 8000); // 8 saniyede bir kontrol
+}
+
+function stopPolling() {
+  if(pollingInterval) { clearInterval(pollingInterval); pollingInterval = null; }
+}
+function openM(id)  { document.getElementById(id).classList.add('open') }
+function closeM(id) { document.getElementById(id).classList.remove('open') }
+function closeOnBg(e, id) { if(e.target.id===id) closeM(id) }
+function openKayitlar() { loadKayitlar(); openM('modal-kayitlar'); startPolling(); }
+
+// ══════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', ()=>{
+  renderRows();
+  setTimeout(()=>{ initSig('uzman'); initSig('denetci'); }, 150);
+  const today=new Date().toISOString().split('T')[0];
+  ['f_tarih','f_uzman_tarih','f_denetci_tarih'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=today; });
+  // Aktif klasör labelını güncelle
+  document.getElementById('aktif-klasor-label').textContent =
+    getKlasorler().find(k=>k.yol===currentKlasor)?.ad || 'Genel';
+  updateFileBar();
+});
+
+window.addEventListener('beforeunload', e=>{ if(isDirty){ e.preventDefault(); e.returnValue=''; } });
+</script>
+</body>
+</html>
