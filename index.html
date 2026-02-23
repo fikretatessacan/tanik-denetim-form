@@ -341,29 +341,8 @@ canvas.sig{position:absolute;top:0;left:0;width:100%;height:100%}
         <textarea class="fi" id="f_muayene_kurulusu" placeholder="Kuruluş adı ve adresi..." oninput="markDirty()"></textarea>
       </div>
       <div class="divider"><div class="divider-line"></div><span class="divider-text">Tanık Olunan / Witnessed</span><div class="divider-line"></div></div>
-      <div class="fgrid" style="margin-bottom:10px">
-        <div class="fg">
-          <label class="fl">Muayene Alanı ve Türü</label>
-          <input class="fi" id="f_muayene_alani" placeholder="Muayene alanı..." oninput="markDirty()">
-        </div>
-        <div class="fg">
-          <label class="fl">Kapsam Genişletme / Scope Extension</label>
-          <label style="display:flex;align-items:center;gap:10px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer;margin-top:2px">
-            <input type="checkbox" id="f_kapsam" onchange="markDirty()" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent)">
-            <span style="font-size:13px;color:var(--ink)">Kapsam Genişletme</span>
-          </label>
-        </div>
-      </div>
-      <div class="fgrid">
-        <div class="fg">
-          <label class="fl">Muayene Personeli / Witnessed Inspector</label>
-          <input class="fi" id="f_personel" placeholder="Personel adı..." oninput="markDirty()">
-        </div>
-        <div class="fg">
-          <label class="fl">Standartlar / Dokümanlar / Rev.No</label>
-          <input class="fi" id="f_standartlar" placeholder="ISO 17020:2012..." oninput="markDirty()">
-        </div>
-      </div>
+      <div id="witnessed-satirlar"></div>
+      <button type="button" onclick="satirEkle()" style="margin-top:8px;background:none;border:1.5px dashed var(--accent);color:var(--accent);border-radius:8px;padding:7px 18px;cursor:pointer;font-size:13px;width:100%">+ Satır Ekle</button>
     </div>
   </div>
 
@@ -572,6 +551,94 @@ function updateFileBar() {
   }
 }
 
+
+let witnessedSatirSayisi = 0;
+
+function satirEkle(veri) {
+  const idx = witnessedSatirSayisi;
+  const container = document.getElementById('witnessed-satirlar');
+  const div = document.createElement('div');
+  div.id = 'witnessed-satir-' + idx;
+  div.style.cssText = 'border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg);position:relative';
+  div.innerHTML = `
+    ${idx > 0 ? `<button onclick="satirSil(${idx})" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--red);cursor:pointer;font-size:16px">×</button>` : ''}
+    <div class="fgrid" style="margin-bottom:8px">
+      <div class="fg">
+        <label class="fl">Muayene Alanı ve Türü</label>
+        <input class="fi" id="f_muayene_alani_${idx}" placeholder="Muayene alanı..." oninput="markDirty()">
+      </div>
+      <div class="fg">
+        <label class="fl">Kapsam Genişletme</label>
+        <label style="display:flex;align-items:center;gap:10px;background:white;border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer">
+          <input type="checkbox" id="f_kapsam_${idx}" onchange="markDirty()" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent)">
+          <span style="font-size:13px;color:var(--ink)">Kapsam Genişletme</span>
+        </label>
+      </div>
+    </div>
+    <div class="fgrid">
+      <div class="fg">
+        <label class="fl">Muayene Personeli</label>
+        <input class="fi" id="f_personel_${idx}" placeholder="Personel adı..." oninput="markDirty()">
+      </div>
+      <div class="fg">
+        <label class="fl">Standartlar / Dokümanlar</label>
+        <input class="fi" id="f_standartlar_${idx}" placeholder="ISO 17020:2012..." oninput="markDirty()">
+      </div>
+    </div>
+  `;
+  container.appendChild(div);
+
+  // Varsa veri doldur
+  if (veri) {
+    document.getElementById('f_muayene_alani_' + idx).value = veri.muayene_alani || '';
+    document.getElementById('f_kapsam_' + idx).checked = veri.kapsam === '☑';
+    document.getElementById('f_personel_' + idx).value = veri.personel || '';
+    document.getElementById('f_standartlar_' + idx).value = veri.standartlar || '';
+  }
+
+  witnessedSatirSayisi++;
+  markDirty();
+}
+
+function satirSil(idx) {
+  const el = document.getElementById('witnessed-satir-' + idx);
+  if (el) el.remove();
+  markDirty();
+}
+
+function collectWitnessedSatirlar() {
+  const satirlar = [];
+  for (let i = 0; i < witnessedSatirSayisi; i++) {
+    const el = document.getElementById('witnessed-satir-' + i);
+    if (!el) continue;
+    satirlar.push({
+      muayene_alani: document.getElementById('f_muayene_alani_' + i)?.value || '',
+      kapsam:        document.getElementById('f_kapsam_' + i)?.checked ? '☑' : '☐',
+      personel:      document.getElementById('f_personel_' + i)?.value || '',
+      standartlar:   document.getElementById('f_standartlar_' + i)?.value || '',
+    });
+  }
+  return satirlar;
+}
+
+function initWitnessedSatirlar(data) {
+  // Eski veriyle uyumluluk
+  witnessedSatirSayisi = 0;
+  document.getElementById('witnessed-satirlar').innerHTML = '';
+  const ws = data.witnessed_satirlar;
+  if (ws && ws.length > 0) {
+    ws.forEach(s => satirEkle(s));
+  } else {
+    // Eski formattan dönüştür
+    satirEkle({
+      muayene_alani: data.muayene_alani || '',
+      kapsam:        data.kapsam || '☐',
+      personel:      data.personel || '',
+      standartlar:   data.standartlar || '',
+    });
+  }
+}
+
 function markDirty() { isDirty = true; updateFileBar(); }
 
 // ══════════════════════════════════════
@@ -676,10 +743,11 @@ function collectData() {
     tarih:            document.getElementById('f_tarih').value,
     denetim_no:       document.getElementById('f_denetim_no').value,
     muayene_kurulusu: document.getElementById('f_muayene_kurulusu').value,
-    muayene_alani:    document.getElementById('f_muayene_alani').value,
-    kapsam:           document.getElementById('f_kapsam').checked ? '☑' : '☐',
-    personel:         document.getElementById('f_personel').value,
-    standartlar:      document.getElementById('f_standartlar').value,
+    muayene_alani:    document.getElementById('f_muayene_alani_0') ? document.getElementById('f_muayene_alani_0').value : '',
+    kapsam:           document.getElementById('f_kapsam_0') ? (document.getElementById('f_kapsam_0').checked ? '☑' : '☐') : '☐',
+    personel:         document.getElementById('f_personel_0') ? document.getElementById('f_personel_0').value : '',
+    standartlar:      document.getElementById('f_standartlar_0') ? document.getElementById('f_standartlar_0').value : '',
+    witnessed_satirlar: collectWitnessedSatirlar(),
     genel:            document.getElementById('f_genel').value,
     uzman_ad:         document.getElementById('f_uzman_ad').value,
     uzman_tarih:      document.getElementById('f_uzman_tarih').value,
@@ -696,11 +764,10 @@ function collectData() {
 }
 
 function fillForm(data) {
-  const ids = ['f_kab_adi','f_tarih','f_denetim_no','f_muayene_kurulusu','f_muayene_alani','f_personel','f_standartlar','f_genel','f_uzman_ad','f_uzman_tarih','f_denetci_ad','f_denetci_tarih'];
-  const keys= ['kab_adi','tarih','denetim_no','muayene_kurulusu','muayene_alani','personel','standartlar','genel','uzman_ad','uzman_tarih','denetci_ad','denetci_tarih'];
-  // kapsam checkbox
-  document.getElementById('f_kapsam').checked = (data.kapsam === '☑');
+  const ids = ['f_kab_adi','f_tarih','f_denetim_no','f_muayene_kurulusu','f_genel','f_uzman_ad','f_uzman_tarih','f_denetci_ad','f_denetci_tarih'];
+  const keys= ['kab_adi','tarih','denetim_no','muayene_kurulusu','genel','uzman_ad','uzman_tarih','denetci_ad','denetci_tarih'];
   ids.forEach((id,i)=>{ const el=document.getElementById(id); if(el) el.value=data[keys[i]]||''; });
+  initWitnessedSatirlar(data);
   if(data.nas_klasor) currentKlasor = data.nas_klasor;
   if(data.satirlar) data.satirlar.forEach(s=>{ if(state[s.id]){state[s.id].durum=s.durum||'';state[s.id].yorum=s.yorum||''} });
   renderRows();
@@ -1057,8 +1124,8 @@ function yeniForm() {
   if(isDirty && !confirm('Kaydedilmemiş değişiklikler var. Yine de sıfırlanacak?')) return;
   currentDocId = null; isDirty = false;
   satirlar.forEach(s=>{ state[s.id]={durum:'',yorum:''} });
-  document.getElementById('f_kapsam').checked = false;
-  ['f_kab_adi','f_muayene_kurulusu','f_muayene_alani','f_personel',
+  witnessedSatirSayisi=0; document.getElementById('witnessed-satirlar').innerHTML=''; satirEkle();
+  ['f_kab_adi','f_muayene_kurulusu',
    'f_standartlar','f_genel','f_uzman_ad','f_denetci_ad','f_denetim_no'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
@@ -1118,6 +1185,7 @@ function showToast(msg) {
 // INIT
 // ══════════════════════════════════════
 document.addEventListener('DOMContentLoaded', ()=>{
+  satirEkle(); // İlk boş witnessed satırı
   renderRows();
   setTimeout(()=>{ initSig('uzman'); initSig('denetci'); }, 150);
   const today=new Date().toISOString().split('T')[0];
