@@ -348,7 +348,10 @@ canvas.sig{position:absolute;top:0;left:0;width:100%;height:100%}
         </div>
         <div class="fg">
           <label class="fl">Kapsam Genişletme / Scope Extension</label>
-          <input class="fi" id="f_kapsam" placeholder="Varsa belirtin..." oninput="markDirty()">
+          <label style="display:flex;align-items:center;gap:10px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer;margin-top:2px">
+            <input type="checkbox" id="f_kapsam" onchange="markDirty()" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent)">
+            <span style="font-size:13px;color:var(--ink)">Kapsam Genişletme</span>
+          </label>
         </div>
       </div>
       <div class="fgrid">
@@ -674,7 +677,7 @@ function collectData() {
     denetim_no:       document.getElementById('f_denetim_no').value,
     muayene_kurulusu: document.getElementById('f_muayene_kurulusu').value,
     muayene_alani:    document.getElementById('f_muayene_alani').value,
-    kapsam:           document.getElementById('f_kapsam').value,
+    kapsam:           document.getElementById('f_kapsam').checked ? '☑' : '☐',
     personel:         document.getElementById('f_personel').value,
     standartlar:      document.getElementById('f_standartlar').value,
     genel:            document.getElementById('f_genel').value,
@@ -693,8 +696,10 @@ function collectData() {
 }
 
 function fillForm(data) {
-  const ids = ['f_kab_adi','f_tarih','f_denetim_no','f_muayene_kurulusu','f_muayene_alani','f_kapsam','f_personel','f_standartlar','f_genel','f_uzman_ad','f_uzman_tarih','f_denetci_ad','f_denetci_tarih'];
-  const keys= ['kab_adi','tarih','denetim_no','muayene_kurulusu','muayene_alani','kapsam','personel','standartlar','genel','uzman_ad','uzman_tarih','denetci_ad','denetci_tarih'];
+  const ids = ['f_kab_adi','f_tarih','f_denetim_no','f_muayene_kurulusu','f_muayene_alani','f_personel','f_standartlar','f_genel','f_uzman_ad','f_uzman_tarih','f_denetci_ad','f_denetci_tarih'];
+  const keys= ['kab_adi','tarih','denetim_no','muayene_kurulusu','muayene_alani','personel','standartlar','genel','uzman_ad','uzman_tarih','denetci_ad','denetci_tarih'];
+  // kapsam checkbox
+  document.getElementById('f_kapsam').checked = (data.kapsam === '☑');
   ids.forEach((id,i)=>{ const el=document.getElementById(id); if(el) el.value=data[keys[i]]||''; });
   if(data.nas_klasor) currentKlasor = data.nas_klasor;
   if(data.satirlar) data.satirlar.forEach(s=>{ if(state[s.id]){state[s.id].durum=s.durum||'';state[s.id].yorum=s.yorum||''} });
@@ -1052,7 +1057,8 @@ function yeniForm() {
   if(isDirty && !confirm('Kaydedilmemiş değişiklikler var. Yine de sıfırlanacak?')) return;
   currentDocId = null; isDirty = false;
   satirlar.forEach(s=>{ state[s.id]={durum:'',yorum:''} });
-  ['f_kab_adi','f_muayene_kurulusu','f_muayene_alani','f_kapsam','f_personel',
+  document.getElementById('f_kapsam').checked = false;
+  ['f_kab_adi','f_muayene_kurulusu','f_muayene_alani','f_personel',
    'f_standartlar','f_genel','f_uzman_ad','f_denetci_ad','f_denetim_no'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
