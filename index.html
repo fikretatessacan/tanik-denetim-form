@@ -514,10 +514,11 @@ function getKlasorler() {
 }
 function defaultKlasorler() {
   return [
-    { ad:'Denetim (Genel)',  yol:'\\\\NAS\\Denetim' },
-    { ad:'2026',             yol:'\\\\NAS\\Denetim\\2026' },
-    { ad:'2026 - Q1',        yol:'\\\\NAS\\Denetim\\2026\\Q1' },
-    { ad:'Arşiv',            yol:'\\\\NAS\\Denetim\\Arsiv' },
+    { ad:'Tanık Denetim 2026', yol:'\\\\NAS\\TanıkDenetim\\2026' },
+    { ad:'Denetim (Genel)',    yol:'\\\\NAS\\Denetim' },
+    { ad:'2026',               yol:'\\\\NAS\\Denetim\\2026' },
+    { ad:'2026 - QI',          yol:'\\\\NAS\\Denetim\\2026\\QI' },
+    { ad:'Arşiv',              yol:'\\\\NAS\\Denetim\\Arsiv' },
   ];
 }
 function saveKlasorler(list) { localStorage.setItem(KLASORLER_KEY, JSON.stringify(list)); }
