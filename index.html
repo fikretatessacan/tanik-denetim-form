@@ -1368,11 +1368,11 @@ async function syncPendingSaves() {
 }
 
 // ── MODIFIED doSave FUNCTION ─────────────
-// Orijinal doSave'i wrap edelim
-const originalDoSave = window.doSave;
+// Orijinal doSave'i wrap edelim — sadece log ekle
+const _origDoSave = window.doSave;
 window.doSave = async function(docId) {
-  try {
-    // Form verilerini topla
+  if (!isOnline || !firebaseReady) {
+    // Offline: form verisini localStorage'e kaydet
     const formData = {
       kab_adi: document.getElementById('f_kab_adi')?.value || '',
       muayene_kurulusu: document.getElementById('f_muayene_kurulusu')?.value || '',
@@ -1384,55 +1384,31 @@ window.doSave = async function(docId) {
       uzman_tarih: document.getElementById('f_uzman_tarih')?.value || '',
       denetci_ad: document.getElementById('f_denetci_ad')?.value || '',
       denetci_tarih: document.getElementById('f_denetci_tarih')?.value || '',
-      // Witnessed satirlar
       witnessed_satirlar: collectWitnessedSatirlar(),
-      // Control rows
       satirlar: satirlar.map(s => ({
         id: s.id,
         durum: state[s.id]?.durum || '',
         yorum: state[s.id]?.yorum || ''
       })),
-      // İmzalar
       sig_uzman: document.getElementById('sig-uzman-canvas')?.toDataURL() || '',
       sig_denetci: document.getElementById('sig-denetci-canvas')?.toDataURL() || '',
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      word_olusturuldu: null,
+      word_dosyasi: null,
+      word_durum: 'bekliyor',
+      word_nas_yolu: null
     };
-    
-    if(isOnline && firebaseReady) {
-      // Online: Firebase'e direkt gönder
-      try {
-        if(docId) {
-          await db.collection('tanik_denetim').doc(docId).set(formData, { merge: true });
-        } else {
-          const ref = await db.collection('tanik_denetim').add(formData);
-          currentDocId = ref.id;
-          docId = ref.id;
-        }
-        FormLogger.log('save', 'success', `Kaydedildi: ${docId}`);
-        showToast('✅ Kaydedildi');
-        isDirty = false;
-        updateFileBar();
-        loadKayitlar();
-        startPolling();
-      } catch(error) {
-        // Firebase başarısız, localStorage'e ekle
-        const tempId = docId || 'offline_' + Date.now();
-        PendingSaves.add(tempId, formData);
-        FormLogger.log('save', 'pending', `Firebase başarısız, offline beklemede`, error);
-        showToast('⚠️ İnternet sorunu, offline beklemede');
-      }
-    } else {
-      // Offline: localStorage'e ekle
-      const tempId = docId || 'offline_' + Date.now();
-      PendingSaves.add(tempId, formData);
-      FormLogger.log('save', 'pending', `Offline modda kaydedildi: ${tempId}`);
-      showToast('🔴 Offline — İnternet gelince gönderilecek');
-    }
-    
-  } catch(error) {
-    FormLogger.log('save', 'failed', `Kayıt hatası`, error);
-    showToast(`❌ Kayıt hatası: ${error.message}`);
+    const tempId = docId || 'offline_' + Date.now();
+    PendingSaves.add(tempId, formData);
+    FormLogger.log('save', 'pending', `Offline kaydedildi: ${tempId}`);
+    showToast('🔴 Offline — İnternet gelince gönderilecek');
+    isDirty = false;
+    updateFileBar();
+    return;
   }
+  // Online: orijinal doSave'e bırak
+  FormLogger.log('save', 'success', `Kayıt başlatıldı: ${docId}`);
+  return _origDoSave(docId);
 };
 
 // ── FILE BAR STATUS GÜNCELLE ────────────
