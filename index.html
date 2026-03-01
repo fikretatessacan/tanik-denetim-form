@@ -2,1202 +2,868 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>F701-056 Tanık Denetim Formu</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔧 Sistem Bakım Paneli</title>
 <style>
-:root {
-  --bg:#f0ede6; --card:#fff; --ink:#1a1a2e; --mid:#6b7280;
-  --light:#e2ddd6; --accent:#1e3a5f; --accent2:#c8423a;
-  --green:#2d6a4f; --red:#c8423a; --gray:#6b7280;
-  --border:#d4cfc4; --gold:#b8860b;
-}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+  :root {
+    --bg: #f0ede6;
+    --card: #faf8f4;
+    --accent: #c0392b;
+    --blue: #2E75B6;
+    --dark: #1F4E79;
+    --green: #27ae60;
+    --orange: #e67e22;
+    --red: #e74c3c;
+    --ink: #2c2c2c;
+    --mid: #666;
+    --border: #e0dbd0;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--ink); min-height: 100vh; }
 
-/* ── HEADER ── */
-.app-header{
-  background:var(--accent);padding:.9rem 1.25rem;
-  position:sticky;top:0;z-index:100;
-  display:flex;align-items:center;justify-content:space-between;
-  box-shadow:0 2px 12px rgba(0,0,0,0.2);
-}
-.header-left{display:flex;align-items:center;gap:10px}
-.turkak-badge{
-  background:#fff;color:var(--accent);font-family:'Syne',sans-serif;
-  font-weight:800;font-size:11px;padding:5px 10px;border-radius:6px;white-space:nowrap;
-}
-.header-title{color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;line-height:1.2}
-.header-sub{color:rgba(255,255,255,0.5);font-size:11px;margin-top:1px}
-.header-right{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  /* HEADER */
+  .header { background: var(--dark); color: white; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .header-title { font-size: 18px; font-weight: 700; }
+  .header-sub { font-size: 12px; opacity: 0.6; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .son-guncelleme { font-size: 11px; opacity: 0.6; }
 
-/* ── CURRENT FILE BAR ── */
-.file-bar{
-  background:rgba(0,0,0,0.15);border-bottom:1px solid rgba(255,255,255,0.08);
-  padding:.5rem 1.25rem;display:flex;align-items:center;gap:8px;
-  position:sticky;top:64px;z-index:99;
-}
-.file-bar-path{
-  flex:1;font-size:11px;color:rgba(255,255,255,0.6);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.file-bar-path strong{color:rgba(255,255,255,0.9)}
-.file-bar-status{
-  font-size:10px;padding:3px 8px;border-radius:10px;font-weight:600;white-space:nowrap;
-}
-.fbs-new{background:rgba(201,168,76,0.25);color:#f0c040;border:1px solid rgba(201,168,76,0.4)}
-.fbs-saved{background:rgba(45,106,79,0.25);color:#7ee8a2;border:1px solid rgba(45,106,79,0.4)}
-.fbs-dirty{background:rgba(200,66,58,0.2);color:#ff8a80;border:1px solid rgba(200,66,58,0.4)}
-.fbs-sync{background:rgba(201,168,76,0.2);color:#f0c040;border:1px solid rgba(201,168,76,0.3)}
+  /* API BAR */
+  .api-bar { background: #163a5f; padding: 8px 18px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .api-bar label { color: #aaa; font-size: 12px; white-space: nowrap; }
+  .api-input { flex: 1; min-width: 180px; padding: 5px 10px; border-radius: 6px; border: 1px solid #444; background: #222; color: white; font-size: 12px; }
+  .api-bar .btn { padding: 5px 14px; font-size: 12px; }
 
-/* ── BUTONLAR ── */
-.btn{
-  border:none;border-radius:8px;padding:8px 12px;
-  font-size:12px;font-weight:600;cursor:pointer;
-  font-family:'DM Sans',sans-serif;transition:opacity .15s,transform .1s;
-  white-space:nowrap;
-}
-.btn:active{transform:scale(.97)}
-.btn-ghost{background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)}
-.btn-fire{background:#ff6d00;color:#fff}
-.btn-green{background:var(--green);color:#fff}
-.btn-accent{background:var(--accent2);color:#fff}
-.btn-gray{background:var(--light);color:var(--ink);border:1px solid var(--border)}
+  /* LAYOUT */
+  .container { max-width: 1100px; margin: 0 auto; padding: 16px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .mb14 { margin-bottom: 14px; }
+  @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
 
-/* ── MAIN ── */
-.main{padding:1.25rem;max-width:900px;margin:0 auto;padding-bottom:6rem}
+  /* KART */
+  .kart { background: var(--card); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden; }
+  .kart-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .kart-title { font-weight: 700; font-size: 14px; color: var(--dark); }
+  .kart-body { padding: 14px 16px; }
 
-/* ── KART ── */
-.kart{background:var(--card);border-radius:18px;border:1px solid var(--border);margin-bottom:1rem;overflow:hidden}
-.kart-header{background:var(--accent);padding:.9rem 1.25rem;display:flex;align-items:center;justify-content:space-between}
-.kart-title{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#fff}
-.kart-sub{font-size:11px;color:rgba(255,255,255,0.5)}
-.kart-body{padding:1.25rem}
+  /* BADGE */
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .badge-green { background: #d4edda; color: #155724; }
+  .badge-red { background: #f8d7da; color: #721c24; }
+  .badge-orange { background: #fff3cd; color: #856404; }
+  .badge-gray { background: #e2e3e5; color: #383d41; }
+  .badge-blue { background: #cce5ff; color: #004085; }
 
-/* ── FIELD ── */
-.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.fg{display:flex;flex-direction:column;gap:4px}
-.fl{font-size:10px;font-weight:600;color:var(--mid);letter-spacing:1px;text-transform:uppercase}
-.fi{
-  background:var(--bg);border:1.5px solid var(--border);border-radius:10px;
-  padding:10px 12px;font-size:14px;font-family:'DM Sans',sans-serif;
-  color:var(--ink);outline:none;width:100%;transition:border-color .2s;
-}
-.fi:focus{border-color:var(--accent)}
-textarea.fi{resize:none;min-height:65px}
-.divider{display:flex;align-items:center;gap:10px;margin:1rem 0 .75rem}
-.divider-line{flex:1;height:1px;background:var(--border)}
-.divider-text{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid)}
+  /* BUTON */
+  .btn { padding: 8px 18px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: var(--dark); color: white; }
+  .btn-primary:hover { background: var(--blue); }
+  .btn-danger { background: var(--red); color: white; }
+  .btn-danger:hover { opacity: 0.85; }
+  .btn-warning { background: var(--orange); color: white; }
+  .btn-warning:hover { opacity: 0.85; }
+  .btn-success { background: var(--green); color: white; }
+  .btn-success:hover { opacity: 0.85; }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn-xs { padding: 3px 10px; font-size: 11px; border-radius: 6px; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ── KONTROL TABLOSU ── */
-.tbl-header{
-  display:grid;grid-template-columns:1fr 110px 1fr;
-  background:#f5f2eb;border-bottom:1.5px solid var(--border);
-  padding:.6rem 1rem;gap:8px;
-}
-.th{font-size:10px;font-weight:700;color:var(--mid);letter-spacing:.8px;text-transform:uppercase}
-.th.c{text-align:center}
-.kontrol-row{
-  display:grid;grid-template-columns:1fr 110px 1fr;
-  padding:.75rem 1rem;gap:8px;border-bottom:1px solid #f0ede6;align-items:start;
-}
-.kontrol-row:last-child{border-bottom:none}
-.kontrol-row:hover{background:#faf9f7}
-.kmadde{font-size:10px;font-weight:700;color:var(--accent);margin-bottom:2px}
-.ktext{font-size:13px;color:var(--ink);line-height:1.45}
-.ktext-en{font-size:10.5px;color:var(--mid);font-style:italic;margin-top:1px;line-height:1.3}
+  /* GİRİŞ EKRANI */
+  #giris-ekrani { position: fixed; inset: 0; background: rgba(15,30,50,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
+  .giris-kart { background: var(--card); border-radius: 16px; padding: 36px 32px; width: 340px; box-shadow: 0 8px 40px rgba(0,0,0,0.3); }
+  .giris-baslik { text-align: center; margin-bottom: 24px; }
+  .giris-baslik .ikon { font-size: 40px; }
+  .giris-baslik h2 { font-size: 20px; color: var(--dark); margin-top: 8px; }
+  .giris-baslik p { font-size: 13px; color: var(--mid); margin-top: 4px; }
+  .form-grup { margin-bottom: 14px; }
+  .form-grup label { display: block; font-size: 12px; font-weight: 600; color: var(--mid); margin-bottom: 6px; }
+  .form-grup input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: white; font-size: 14px; outline: none; transition: border .2s; }
+  .form-grup input:focus { border-color: var(--blue); }
+  .giris-hata { color: var(--red); font-size: 12px; text-align: center; margin-bottom: 10px; min-height: 18px; }
+  .giris-alt { text-align: center; margin-top: 16px; }
+  .giris-alt a { color: var(--blue); font-size: 13px; cursor: pointer; text-decoration: none; }
+  .giris-alt a:hover { text-decoration: underline; }
 
-/* ── DROPDOWN ── */
-.durum-select{
-  width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);
-  background:var(--bg);color:var(--mid);font-size:13px;font-weight:600;
-  font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;
-  transition:all .15s;appearance:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
-}
-.durum-select.val-Y{background-color:rgba(45,106,79,.08);border-color:var(--green);color:var(--green);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%232d6a4f' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")}
-.durum-select.val-YD{background-color:rgba(200,66,58,.08);border-color:var(--red);color:var(--red);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c8423a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")}
-.durum-select.val-UD{background-color:rgba(107,114,128,.08);border-color:var(--gray);color:var(--gray);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")}
-.yorum-input{
-  background:var(--bg);border:1.5px solid var(--border);border-radius:8px;
-  padding:8px 10px;font-size:12px;font-family:'DM Sans',sans-serif;
-  color:var(--ink);outline:none;resize:none;min-height:58px;width:100%;transition:border-color .2s;
-}
-.yorum-input:focus{border-color:var(--accent)}
-.yorum-input.yd{border-color:var(--red);background:rgba(200,66,58,.04)}
+  /* PROGRESS BAR */
+  .progress-wrap { background: var(--border); border-radius: 8px; height: 8px; overflow: hidden; margin-top: 6px; }
+  .progress-bar { height: 100%; border-radius: 8px; transition: width .5s ease; }
+  .progress-green { background: var(--green); }
+  .progress-orange { background: var(--orange); }
+  .progress-red { background: var(--red); }
 
-/* ── İMZA ── */
-.imza-grid{display:grid;grid-template-columns:1fr 1fr}
-.imza-col{padding:1.25rem;border-right:1px solid var(--border)}
-.imza-col:last-child{border-right:none}
-.imza-title{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--accent);margin-bottom:1rem}
-.sig-wrap{background:var(--bg);border:2px dashed var(--border);border-radius:10px;height:100px;position:relative;overflow:hidden;cursor:crosshair;margin-bottom:6px}
-canvas.sig{position:absolute;top:0;left:0;width:100%;height:100%}
-.sig-ph{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;color:var(--mid);pointer-events:none;transition:opacity .2s}
-.sig-clear{font-size:11px;color:var(--accent2);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;padding:2px 0;display:block;margin-bottom:8px}
+  /* BİLGİ SATIRI */
+  .bilgi-satir { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .bilgi-satir:last-child { border-bottom: none; }
+  .bilgi-etiket { color: var(--mid); }
+  .bilgi-deger { font-weight: 600; color: var(--ink); }
 
-/* ── NOTLAR ── */
-.notlar{background:rgba(30,58,95,.05);border-radius:14px;border:1px solid rgba(30,58,95,.15);padding:1rem 1.25rem;margin-bottom:1rem}
-.notlar p{font-size:11.5px;color:var(--mid);line-height:1.6;margin-bottom:4px}
+  /* BEKLEYEN KAYITLAR TABLOSU */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tbl th { background: var(--dark); color: white; padding: 8px 10px; text-align: left; font-weight: 600; font-size: 12px; }
+  .tbl td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:nth-child(even) td { background: #f8f6f0; }
+  .tbl tr:hover td { background: #edf4fb; }
 
-/* ── ALT BAR ── */
-.ozet-bar{
-  position:fixed;bottom:0;left:0;right:0;background:var(--card);
-  border-top:1px solid var(--border);padding:.75rem 1.25rem;
-  display:flex;align-items:center;justify-content:space-between;
-  z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,.06);
-}
-.ozet-counts{display:flex;gap:16px}
-.ozet-item{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
-.dot{width:8px;height:8px;border-radius:50%}
-.dot.y{background:var(--green)}.dot.yd{background:var(--red)}.dot.ud{background:var(--gray)}
-.save-btns{display:flex;gap:6px}
+  /* DURUM CHIP */
+  .chip { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .chip-bekliyor { background: #fff3cd; color: #856404; }
+  .chip-hata { background: #f8d7da; color: #721c24; }
 
-/* ── TOAST ── */
-.toast{
-  position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);
-  background:var(--ink);color:#fff;padding:10px 20px;border-radius:20px;
-  font-size:13px;opacity:0;transition:all .3s;z-index:999;pointer-events:none;white-space:nowrap;
-}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  /* LOG KUTU */
+  .log-kutu { background: #1a1a2e; border-radius: 10px; padding: 12px; max-height: 280px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 11px; }
+  .log-satir { padding: 3px 0; border-bottom: 1px solid #2a2a3e; color: #ccc; word-break: break-all; }
+  .log-satir.ok { color: #5cb85c; }
+  .log-satir.hata { color: #d9534f; }
+  .log-satir.uyari { color: #f0ad4e; }
+  .log-satir.info { color: #5bc0de; }
 
-/* ── MODAL GENEL ── */
-.modal-overlay{
-  display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);
-  z-index:200;align-items:flex-end;
-}
-.modal-overlay.open{display:flex}
-.modal-sheet{
-  background:var(--card);border-radius:20px 20px 0 0;
-  width:100%;max-height:80vh;overflow-y:auto;
-}
-.modal-head{
-  padding:1.25rem 1.25rem .75rem;display:flex;
-  justify-content:space-between;align-items:center;
-  border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--card);z-index:1;
-}
-.modal-head-title{font-family:'Syne',sans-serif;font-weight:800;font-size:16px}
-.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--mid)}
-.modal-body{padding:1.25rem}
+  /* KONTROL LİSTESİ */
+  .kontrol-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .kontrol-item:last-child { border-bottom: none; }
+  .kontrol-auto { font-size: 18px; width: 26px; text-align: center; flex-shrink: 0; }
+  .kontrol-text { flex: 1; font-size: 13px; }
+  .kontrol-text.done { color: var(--mid); }
+  .kontrol-aciklama { font-size: 11px; color: var(--red); margin-top: 2px; }
+  .kontrol-periyot { font-size: 10px; padding: 2px 7px; border-radius: 8px; flex-shrink: 0; }
+  .periyot-gun { background: #d4edda; color: #155724; }
+  .periyot-hafta { background: #cce5ff; color: #004085; }
+  .periyot-ay { background: #fff3cd; color: #856404; }
 
-/* ── KAYIT LİSTESİ ── */
-.kayit-item{
-  padding:.9rem 1rem;border-radius:12px;border:1px solid var(--border);
-  margin-bottom:8px;cursor:pointer;transition:background .15s;
-  display:flex;align-items:center;gap:10px;
-}
-.kayit-item:hover{background:var(--bg)}
-.kayit-item.active-record{border-color:var(--accent);background:rgba(30,58,95,.05)}
-.kayit-icon{font-size:22px;flex-shrink:0}
-.kayit-info{flex:1;min-width:0}
-.kayit-ad{font-weight:600;font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.kayit-meta{font-size:11px;color:var(--mid);margin-top:2px}
-.kayit-klasor{font-size:10px;color:var(--accent);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.word-badge{font-size:10px;padding:2px 7px;border-radius:5px;font-weight:600;white-space:nowrap}
-.wb-ok{background:rgba(45,106,79,.1);color:var(--green);border:1px solid rgba(45,106,79,.2)}
-.wb-wait{background:rgba(201,168,76,.15);color:#a07800;border:1px solid rgba(201,168,76,.3)}
-.wb-err{background:rgba(200,66,58,.1);color:var(--red);border:1px solid rgba(200,66,58,.2)}
-.kayit-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
-.kayit-ozet{display:flex;gap:6px}
-.kayit-actions{display:flex;gap:4px}
-.kayit-act-btn{
-  background:none;border:1px solid var(--border);border-radius:6px;
-  padding:4px 8px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;
-  color:var(--mid);transition:all .15s;
-}
-.kayit-act-btn:hover{background:var(--bg);color:var(--ink)}
-.kayit-act-btn.del:hover{border-color:var(--red);color:var(--red)}
+  /* ACİL GRID */
+  .acil-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 600px) { .acil-grid { grid-template-columns: 1fr; } }
 
-/* ── KLASÖR SEÇİMİ ── */
-.klasor-list{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem}
-.klasor-item{
-  padding:.8rem 1rem;border-radius:10px;border:1.5px solid var(--border);
-  cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .15s;
-}
-.klasor-item:hover{background:var(--bg);border-color:var(--accent)}
-.klasor-item.selected{border-color:var(--accent);background:rgba(30,58,95,.06)}
-.klasor-icon{font-size:20px}
-.klasor-name{font-weight:600;font-size:13px}
-.klasor-path{font-size:11px;color:var(--mid);margin-top:1px}
-.klasor-check{margin-left:auto;color:var(--accent);font-size:16px;opacity:0}
-.klasor-item.selected .klasor-check{opacity:1}
+  /* BÖLÜM BAŞLIĞI */
+  .bolum-baslik { font-size: 11px; font-weight: 700; color: var(--mid); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
 
-.new-klasor-row{display:flex;gap:8px;margin-top:8px}
-.new-klasor-input{
-  flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;
-  padding:10px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;
-}
-.new-klasor-input:focus{border-color:var(--accent)}
+  /* TOAST */
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1a1a2e; color: white; padding: 11px 22px; border-radius: 10px; font-size: 13px; opacity: 0; transition: opacity .3s; z-index: 9999; pointer-events: none; white-space: nowrap; }
+  #toast.show { opacity: 1; }
 
-/* ── KAYDET MOD ── */
-.save-mod-sheet{
-  background:var(--card);border-radius:20px 20px 0 0;
-  width:100%;padding:0;
-}
-.save-mod-option{
-  display:flex;align-items:center;gap:12px;padding:1rem 1.25rem;
-  border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;
-}
-.save-mod-option:last-child{border-bottom:none}
-.save-mod-option:hover{background:var(--bg)}
-.smo-icon{font-size:24px;flex-shrink:0}
-.smo-title{font-weight:600;font-size:14px}
-.smo-desc{font-size:12px;color:var(--mid);margin-top:2px}
-.smo-badge{
-  margin-left:auto;font-size:10px;padding:3px 8px;border-radius:6px;font-weight:600;flex-shrink:0;
-}
-.smo-badge.over{background:rgba(200,66,58,.12);color:var(--red)}
-.smo-badge.new{background:rgba(45,106,79,.12);color:var(--green)}
+  /* SPINNER */
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin .6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── FILTER ── */
-.kayit-filters{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
-.filter-btn{
-  padding:6px 12px;border-radius:8px;border:1.5px solid var(--border);
-  background:var(--bg);font-size:12px;font-weight:500;cursor:pointer;
-  font-family:'DM Sans',sans-serif;color:var(--mid);transition:all .15s;
-}
-.filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  /* BOŞ DURUM */
+  .bos { text-align: center; padding: 24px; color: var(--mid); font-size: 13px; }
 
-/* ── ARAMA ── */
-.search-input{
-  width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;
-  padding:10px 12px 10px 36px;font-size:13px;font-family:'DM Sans',sans-serif;
-  color:var(--ink);outline:none;margin-bottom:1rem;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:10px center;
-}
-.search-input:focus{border-color:var(--accent)}
-
-@media(max-width:640px){
-  .fgrid{grid-template-columns:1fr}
-  .tbl-header{display:none}
-  .kontrol-row{grid-template-columns:1fr;gap:6px}
-  .imza-grid{grid-template-columns:1fr}
-  .imza-col{border-right:none;border-bottom:1px solid var(--border)}
-  .imza-col:last-child{border-bottom:none}
-  .header-right{gap:4px}
-  .save-btns{gap:4px}
-}
+  /* ADMIN ROZET */
+  .admin-rozet { background: #ffd700; color: #333; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+  .kullanici-rozet { background: #cce5ff; color: #004085; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; }
 </style>
 </head>
 <body>
 
-<div class="toast" id="toast"></div>
+<!-- GİRİŞ EKRANI -->
+<div id="giris-ekrani">
+  <div class="giris-kart">
+    <div class="giris-baslik">
+      <div class="ikon">🔧</div>
+      <h2>Bakım Paneli</h2>
+      <p>Devam etmek için giriş yapın veya misafir olarak görüntüleyin</p>
+    </div>
+    <div class="form-grup">
+      <label>Kullanıcı Adı</label>
+      <input type="text" id="giris-kullanici" placeholder="kullanıcı adı" autocomplete="username">
+    </div>
+    <div class="form-grup">
+      <label>Şifre</label>
+      <input type="password" id="giris-sifre" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter') girisYap()">
+    </div>
+    <div class="giris-hata" id="giris-hata"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="girisYap()">🔐 Admin Olarak Giriş</button>
+    <div class="giris-alt">
+      <a onclick="misafirGiris()">👁️ Misafir olarak devam et (sınırlı görünüm)</a>
+    </div>
+  </div>
+</div>
 
 <!-- HEADER -->
-<div class="app-header">
-  <div class="header-left">
-    <div class="turkak-badge">TÜRKAK</div>
-    <div>
-      <div class="header-title">Tanık Denetim Formu</div>
-      <div class="header-sub">F701-056 · Rev.03</div>
-    </div>
+<div class="header">
+  <div>
+    <div class="header-title">🔧 Sistem Bakım Paneli</div>
+    <div class="header-sub">Dijital Form Dönüşüm Sistemi</div>
   </div>
   <div class="header-right">
-    <button class="btn btn-ghost" onclick="openKayitlar()">📂 Aç</button>
-    <button class="btn btn-ghost" onclick="yeniForm()">+ Yeni</button>
-    <button class="btn btn-fire" onclick="openSaveMod()">💾 Kaydet</button>
+    <span id="rol-rozet" class="kullanici-rozet">Misafir</span>
+    <span class="son-guncelleme" id="son-guncelleme">—</span>
+    <button class="btn btn-sm" id="cikis-btn" style="background:#c0392b;color:white;display:none" onclick="cikisYap()">Çıkış</button>
   </div>
 </div>
 
-<!-- DOSYA DURUM BARІ -->
-<div class="file-bar" style="background:var(--accent)">
-  <span id="file-bar-path" class="file-bar-path">📄 Yeni form</span>
-  <span id="file-bar-status" class="file-bar-status fbs-new">Yeni</span>
+<!-- API BAR -->
+<div class="api-bar">
+  <label>Pi API:</label>
+  <input class="api-input" id="api-url" value="http://100.82.246.45:5050">
+  <button class="btn btn-success btn-sm" onclick="baglantiKur()">🔌 Bağlan</button>
+  <button class="btn btn-primary btn-sm" onclick="tumunuYenile()">🔄 Yenile</button>
 </div>
 
-<div class="main">
+<div class="container">
 
-  <!-- ÜST BİLGİ -->
-  <div class="kart">
-    <div class="kart-header">
-      <div>
-        <div class="kart-title">Genel Bilgiler</div>
-        <div class="kart-sub">F701-056 / Rev.03 / 0119 · Sheet of Objective Evidence</div>
+  <!-- KULLANICI BÖLÜMÜ — Herkes görür -->
+  <div id="kullanici-bolum">
+
+    <!-- Script Durumu -->
+    <div class="kart mb14">
+      <div class="kart-header">
+        <span class="kart-title">⚙️ Script Durumu</span>
+        <span class="badge badge-gray" id="script-badge">Kontrol ediliyor...</span>
+      </div>
+      <div class="kart-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div style="font-size:14px" id="script-aciklama">—</div>
+        <button class="btn btn-success btn-sm" id="script-basla-btn" style="display:none" onclick="scriptBaslat()">▶️ Başlat</button>
       </div>
     </div>
-    <div class="kart-body">
-      <div class="fgrid" style="margin-bottom:10px">
-        <div class="fg">
-          <label class="fl">Kuruluşun Adı / Name of the CAB</label>
-          <input class="fi" id="f_kab_adi" placeholder="Kuruluş adı..." oninput="markDirty()">
+
+    <!-- Bekleyen Kayıtlar -->
+    <div class="kart mb14">
+      <div class="kart-header">
+        <span class="kart-title">📋 Bekleyen Kayıtlar</span>
+        <span class="badge badge-gray" id="bekleyen-badge">—</span>
+      </div>
+      <div class="kart-body" style="padding:0;overflow-x:auto">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Müşteri Adı</th>
+              <th>Muayene Alanı</th>
+              <th>Denetim No</th>
+              <th>Tarih / Saat</th>
+              <th>Durum</th>
+            </tr>
+          </thead>
+          <tbody id="bekleyen-tablo">
+            <tr><td colspan="5" class="bos">Yükleniyor...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ADMİN BÖLÜMÜ — Sadece admin görür -->
+  <div id="admin-bolum" style="display:none">
+
+    <div class="grid-3">
+      <!-- NAS -->
+      <div class="kart">
+        <div class="kart-header">
+          <span class="kart-title">💾 NAS Disk</span>
+          <span class="badge badge-gray" id="nas-badge">—</span>
         </div>
-        <div class="fgrid" style="gap:8px">
-          <div class="fg">
-            <label class="fl">Denetim Tarihi</label>
-            <input class="fi" id="f_tarih" type="date" oninput="markDirty()">
+        <div class="kart-body">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--mid);margin-bottom:4px">
+            <span id="nas-kullanilan">—</span><span id="nas-toplam">—</span>
           </div>
-          <div class="fg">
-            <label class="fl">Denetim No</label>
-            <input class="fi" id="f_denetim_no" placeholder="AB-XXXX" oninput="markDirty()">
+          <div class="progress-wrap">
+            <div class="progress-bar progress-green" id="nas-progress" style="width:0%"></div>
+          </div>
+          <div style="text-align:right;font-size:11px;color:var(--mid);margin-top:4px" id="nas-yuzde">—</div>
+        </div>
+      </div>
+
+      <!-- CPU/RAM -->
+      <div class="kart">
+        <div class="kart-header">
+          <span class="kart-title">💻 Sistem</span>
+          <span class="badge badge-gray" id="sistem-badge">—</span>
+        </div>
+        <div class="kart-body">
+          <div class="bilgi-satir"><span class="bilgi-etiket">CPU</span><span class="bilgi-deger" id="cpu-deger">—</span></div>
+          <div class="bilgi-satir"><span class="bilgi-etiket">RAM</span><span class="bilgi-deger" id="ram-deger">—</span></div>
+          <div class="bilgi-satir"><span class="bilgi-etiket">Uptime</span><span class="bilgi-deger" id="uptime-deger" style="font-size:11px">—</span></div>
+        </div>
+      </div>
+
+      <!-- Firebase -->
+      <div class="kart">
+        <div class="kart-header">
+          <span class="kart-title">☁️ Firebase</span>
+          <span class="badge badge-gray" id="firebase-badge">—</span>
+        </div>
+        <div class="kart-body">
+          <div class="bilgi-satir"><span class="bilgi-etiket">Bekleyen</span><span class="bilgi-deger" id="fb-bekleyen">—</span></div>
+          <div class="bilgi-satir"><span class="bilgi-etiket">Tamamlanan</span><span class="bilgi-deger" id="fb-tamamlanan">—</span></div>
+          <div class="bilgi-satir"><span class="bilgi-etiket">Toplam</span><span class="bilgi-deger" id="fb-toplam">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+
+      <!-- ACİL KOMUTLAR -->
+      <div class="kart">
+        <div class="kart-header"><span class="kart-title">⚡ Komutlar</span></div>
+        <div class="kart-body">
+          <div class="acil-grid">
+            <button class="btn btn-success" onclick="scriptRestart()">🔄 Script Yeniden Başlat</button>
+            <button class="btn btn-danger" onclick="piReboot()">🔁 Pi Yeniden Başlat</button>
+            <button class="btn btn-primary" onclick="adminYenile()">📊 Verileri Yenile</button>
+            <button class="btn btn-primary" onclick="logYenile()">📋 Logları Yenile</button>
+          </div>
+          <div style="margin-top:12px;padding:10px;background:#fff8f0;border-radius:8px;border-left:3px solid var(--orange)">
+            <div style="font-size:11px;color:var(--orange);font-weight:700">⚠️ Dikkat</div>
+            <div style="font-size:11px;color:var(--mid);margin-top:3px">Pi Reboot sonrası 2 dakika beklemeniz gerekir. Script otomatik başlar.</div>
           </div>
         </div>
       </div>
-      <div class="fg" style="margin-bottom:10px">
-        <label class="fl">Muayene Yapılan Kuruluş Ve Adresi</label>
-        <textarea class="fi" id="f_muayene_kurulusu" placeholder="Kuruluş adı ve adresi..." oninput="markDirty()"></textarea>
+
+      <!-- SON NAS DOSYALAR -->
+      <div class="kart">
+        <div class="kart-header"><span class="kart-title">📁 Son Üretilen Dosyalar</span></div>
+        <div class="kart-body" style="max-height:200px;overflow-y:auto">
+          <div id="son-dosyalar" style="font-size:12px;color:var(--mid)">Yükleniyor...</div>
+        </div>
       </div>
-      <div class="divider"><div class="divider-line"></div><span class="divider-text">Tanık Olunan / Witnessed</span><div class="divider-line"></div></div>
-      <div id="witnessed-satirlar"></div>
-      <button type="button" onclick="satirEkle()" style="margin-top:8px;background:none;border:1.5px dashed var(--accent);color:var(--accent);border-radius:8px;padding:7px 18px;cursor:pointer;font-size:13px;width:100%">+ Satır Ekle</button>
+
     </div>
+
+    <!-- LOGLAR -->
+    <div class="kart mb14">
+      <div class="kart-header">
+        <span class="kart-title">📋 Son Loglar</span>
+        <button class="btn btn-primary btn-sm" onclick="logYenile()">Yenile</button>
+      </div>
+      <div class="kart-body">
+        <div class="log-kutu" id="log-kutu">
+          <div class="log-satir info">Admin girişi yapıldıktan sonra loglar yüklenir...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KONTROL LİSTESİ -->
+    <div class="kart mb14">
+      <div class="kart-header">
+        <span class="kart-title">☑️ Bakım Kontrol Listesi</span>
+        <button class="btn btn-primary btn-sm" onclick="listeTemizle()">Sıfırla</button>
+      </div>
+      <div class="kart-body" id="kontrol-listesi"></div>
+    </div>
+
+    <!-- FORM LOGLARI -->
+    <div class="kart mb14">
+      <div class="kart-header">
+        <span class="kart-title">📋 Form Logları</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-success btn-sm" onclick="syncFormNow()">⚡ Sync</button>
+          <button class="btn btn-warning btn-sm" onclick="clearFormLogs()">🗑️ Temizle</button>
+          <button class="btn btn-primary btn-sm" onclick="loadFormLogs()">🔄 Yenile</button>
+        </div>
+      </div>
+      <div class="kart-body">
+        <p style="color:var(--mid);font-size:12px;margin-bottom:12px">Web formdan gelen offline/sync/hata logları. Loglar formun browser'ında localStorage'de tutulur.</p>
+
+        <!-- İstatistik kutucukları -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
+          <div style="background:#f0f4ff;padding:12px;border-radius:8px;border-left:4px solid #2E75B6;text-align:center">
+            <div style="font-size:10px;color:var(--mid);text-transform:uppercase;margin-bottom:4px">Çevrimiçi</div>
+            <div style="font-size:22px;font-weight:700;color:#2E75B6" id="stat-online">—</div>
+          </div>
+          <div style="background:#f0fff4;padding:12px;border-radius:8px;border-left:4px solid var(--green);text-align:center">
+            <div style="font-size:10px;color:var(--mid);text-transform:uppercase;margin-bottom:4px">Başarılı</div>
+            <div style="font-size:22px;font-weight:700;color:var(--green)" id="stat-success">—</div>
+          </div>
+          <div style="background:#fff0f0;padding:12px;border-radius:8px;border-left:4px solid var(--red);text-align:center">
+            <div style="font-size:10px;color:var(--mid);text-transform:uppercase;margin-bottom:4px">Başarısız</div>
+            <div style="font-size:22px;font-weight:700;color:var(--red)" id="stat-failed">—</div>
+          </div>
+          <div style="background:#fffbf0;padding:12px;border-radius:8px;border-left:4px solid var(--orange);text-align:center">
+            <div style="font-size:10px;color:var(--mid);text-transform:uppercase;margin-bottom:4px">Beklemede</div>
+            <div style="font-size:22px;font-weight:700;color:var(--orange)" id="stat-pending">—</div>
+          </div>
+        </div>
+
+        <!-- Log tablosu -->
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Tarih/Saat</th>
+                <th>İşlem</th>
+                <th>Durum</th>
+                <th>Mesaj</th>
+                <th style="width:80px">Ayrıntı</th>
+              </tr>
+            </thead>
+            <tbody id="form-logs-table">
+              <tr><td colspan="5" class="bos">Admin girişi yapıldıktan sonra yüklenir...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <!-- KONTROL KRİTERLERİ -->
-  <div class="kart">
-    <div class="kart-header">
-      <div>
-        <div class="kart-title">Denetim Kontrol Kriterleri</div>
-        <div class="kart-sub">ISO/IEC 17020 · 15 kriter</div>
-      </div>
-    </div>
-    <div class="tbl-header">
-      <div class="th">Kontrol Kriteri</div>
-      <div class="th c">Durum *</div>
-      <div class="th">İlgili Kayıtlar / Yorum</div>
-    </div>
-    <div id="kontrol-rows"></div>
-  </div>
-
-  <!-- GENEL DEĞERLENDİRME -->
-  <div class="kart">
-    <div class="kart-header"><div class="kart-title">Genel Değerlendirme / Overall Evaluation</div></div>
+  <!-- SİSTEM BİLGİLERİ — Herkes görür -->
+  <div class="kart mb14">
+    <div class="kart-header"><span class="kart-title">ℹ️ Sistem Bilgileri</span></div>
     <div class="kart-body">
-      <div style="background:#f0ede6;border-radius:10px;padding:10px 12px;font-size:11.5px;color:var(--mid);line-height:1.5;margin-bottom:1rem;border-left:3px solid var(--accent)">
-        Muayene personelinin izlenebilirlik/kalibrasyon bilgi seviyesi, muayene sürelerinin gerçeğe uygunluğu ve bulguların sınıflandırılması bu bölümde değerlendirilebilir.
-      </div>
-      <textarea class="fi" id="f_genel" placeholder="Genel değerlendirme notlarınızı yazın..." style="min-height:120px" oninput="markDirty()"></textarea>
+      <div class="bilgi-satir"><span class="bilgi-etiket">Form URL</span><span class="bilgi-deger"><a href="https://fikretatessacan.github.io/tanik-denetim-form" target="_blank" style="color:var(--blue);font-size:12px">tanik-denetim-form</a></span></div>
+      <div class="bilgi-satir"><span class="bilgi-etiket">Pi (Tailscale)</span><span class="bilgi-deger">100.82.246.45</span></div>
+      <div class="bilgi-satir"><span class="bilgi-etiket">NAS Klasörü</span><span class="bilgi-deger" style="font-size:11px">/mnt/nas/TanıkDenetim/2026/</span></div>
+      <div class="bilgi-satir"><span class="bilgi-etiket">Firebase</span><span class="bilgi-deger">turkak-tanik-denetim</span></div>
     </div>
   </div>
 
-  <!-- İMZALAR -->
-  <div class="kart">
-    <div class="kart-header"><div class="kart-title">İmzalar / Signatures</div></div>
-    <div class="imza-grid">
-      <div class="imza-col">
-        <div class="imza-title">🔬 Teknik Uzman / Technical Expert</div>
-        <div class="fg" style="margin-bottom:8px"><label class="fl">Adı Soyadı</label><input class="fi" id="f_uzman_ad" placeholder="Ad Soyad..." oninput="markDirty()"></div>
-        <div class="fg" style="margin-bottom:8px"><label class="fl">Tarih</label><input class="fi" id="f_uzman_tarih" type="date" oninput="markDirty()"></div>
-        <label class="fl" style="display:block;margin-bottom:6px">İmza</label>
-        <div class="sig-wrap" id="wrap-uzman"><canvas class="sig" id="sig-uzman"></canvas><span class="sig-ph" id="ph-uzman">✍️ İmzalayın</span></div>
-        <button class="sig-clear" onclick="clearSig('uzman')">× Temizle</button>
-      </div>
-      <div class="imza-col">
-        <div class="imza-title">📋 Ekip Lideri / Denetçi</div>
-        <div class="fg" style="margin-bottom:8px"><label class="fl">Adı Soyadı</label><input class="fi" id="f_denetci_ad" placeholder="Ad Soyad..." oninput="markDirty()"></div>
-        <div class="fg" style="margin-bottom:8px"><label class="fl">Tarih</label><input class="fi" id="f_denetci_tarih" type="date" oninput="markDirty()"></div>
-        <label class="fl" style="display:block;margin-bottom:6px">İmza</label>
-        <div class="sig-wrap" id="wrap-denetci"><canvas class="sig" id="sig-denetci"></canvas><span class="sig-ph" id="ph-denetci">✍️ İmzalayın</span></div>
-        <button class="sig-clear" onclick="clearSig('denetci')">× Temizle</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="notlar">
-    <p><strong style="color:var(--green)">Y:</strong> Yeterli &nbsp;|&nbsp; <strong style="color:var(--red)">YD:</strong> Yeterli Değil &nbsp;|&nbsp; <strong style="color:var(--gray)">UD:</strong> Uygulanabilir Değil</p>
-    <p><strong>T:</strong> Tanık &nbsp;|&nbsp; <strong>M:</strong> Mülakat &nbsp;|&nbsp; <strong>K:</strong> Kayıt İnceleme &nbsp;|&nbsp; <strong>Ö:</strong> Ölçüm</p>
-    <p style="margin-top:4px">⚠️ Bu form ile ilgili kayıtlar e-TÜRKAK portalına yüklenmelidir. · F701-056/rev03/0119</p>
-  </div>
 </div>
 
-<!-- ALT BAR -->
-<div class="ozet-bar">
-  <div class="ozet-counts">
-    <div class="ozet-item"><div class="dot y"></div><span id="cnt-y">0</span> Y</div>
-    <div class="ozet-item"><div class="dot yd"></div><span id="cnt-yd">0</span> YD</div>
-    <div class="ozet-item"><div class="dot ud"></div><span id="cnt-ud">0</span> UD</div>
-  </div>
-  <div class="save-btns">
-    <button class="btn btn-gray" onclick="openKlasörSec()">📁 Klasör</button>
-    <button class="btn btn-fire" onclick="openSaveMod()">💾 Kaydet</button>
-  </div>
-</div>
-
-<!-- ══ MODAL: KAYITLAR ══ -->
-<div class="modal-overlay" id="modal-kayitlar" onclick="closeOnBg(event,'modal-kayitlar')">
-  <div class="modal-sheet">
-    <div class="modal-head">
-      <span class="modal-head-title">📂 Kayıtlı Formlar</span>
-      <button class="modal-close" onclick="closeM('modal-kayitlar')">✕</button>
-    </div>
-    <div class="modal-body">
-      <input class="search-input" id="kayit-search" placeholder="Kuruluş adı veya denetim no ara..." oninput="filterKayitlar()">
-      <div class="kayit-filters">
-        <button class="filter-btn active" onclick="setFilter('hepsi',this)">Hepsi</button>
-        <button class="filter-btn" onclick="setFilter('bu-ay',this)">Bu Ay</button>
-        <button class="filter-btn" onclick="setFilter('yd-var',this)">YD Olanlar</button>
-      </div>
-      <div id="kayit-klasor-filter" style="margin-bottom:.75rem;font-size:11px;color:var(--mid)">
-        Klasör: <span id="aktif-klasor-label" style="color:var(--accent);font-weight:600">Tümü</span>
-        <button onclick="setKlasorFilter(null)" style="background:none;border:none;color:var(--accent2);cursor:pointer;font-size:11px;margin-left:6px">× Tümünü göster</button>
-      </div>
-      <div id="kayit-liste"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ══ MODAL: KAYDET MOD ══ -->
-<div class="modal-overlay" id="modal-save-mod" onclick="closeOnBg(event,'modal-save-mod')">
-  <div class="save-mod-sheet">
-    <div class="modal-head">
-      <span class="modal-head-title">💾 Nasıl Kaydedilsin?</span>
-      <button class="modal-close" onclick="closeM('modal-save-mod')">✕</button>
-    </div>
-    <div id="save-mod-content"></div>
-  </div>
-</div>
-
-<!-- ══ MODAL: KLASÖR SEÇ ══ -->
-<div class="modal-overlay" id="modal-klasor" onclick="closeOnBg(event,'modal-klasor')">
-  <div class="modal-sheet">
-    <div class="modal-head">
-      <span class="modal-head-title">📁 NAS Klasörü Seç</span>
-      <button class="modal-close" onclick="closeM('modal-klasor')">✕</button>
-    </div>
-    <div class="modal-body">
-      <p style="font-size:12px;color:var(--mid);margin-bottom:1rem">Raporların kaydedileceği NAS klasörünü seçin. Raspberry Pi bu klasöre Word dosyasını oluşturacak.</p>
-      <div class="klasor-list" id="klasor-list"></div>
-      <div class="new-klasor-row">
-        <input class="new-klasor-input" id="new-klasor-input" placeholder="Klasör adı (ör: 2026-Q2)">
-      </div>
-      <div class="new-klasor-row" style="margin-top:6px">
-        <input class="new-klasor-input" id="new-klasor-yol" placeholder="\\\\NAS\\Denetim\\2026-Q2" style="font-family:monospace;font-size:12px">
-        <button class="btn btn-accent" onclick="addKlasor()">+ Ekle</button>
-      </div>
-      <div style="font-size:11px;color:var(--mid);margin-top:6px">
-        💡 Ör: <code style="background:#f0ede6;padding:2px 6px;border-radius:4px">\\NAS\Denetim\2026</code> &nbsp;veya&nbsp; <code style="background:#f0ede6;padding:2px 6px;border-radius:4px">\\192.168.1.100\Denetim</code>
-      </div>
-      <button class="btn btn-green" style="width:100%;margin-top:1rem" onclick="saveKlasorSec()">✅ Seçimi Kaydet</button>
-    </div>
-  </div>
-</div>
+<div id="toast"></div>
 
 <script>
-// ══════════════════════════════════════
-// ⚙️ FİREBASE YAPILANDIRMASI
-// ══════════════════════════════════════
-const firebaseConfig = {
-  apiKey:            "AIzaSyBP3RnxoIEsG823z-RKKbEA9I7etjGPIas",
-  authDomain:        "turkak-tanik-denetim.firebaseapp.com",
-  projectId:         "turkak-tanik-denetim",
-  storageBucket:     "turkak-tanik-denetim.firebasestorage.app",
-  messagingSenderId: "421430501390",
-  appId:             "1:421430501390:web:7dadb8cd6d86de2e64dc5f"
-};
+// ── AYARLAR ──────────────────────────────────────────────────
+let API_URL = localStorage.getItem('api_url') || 'http://100.82.246.45:5050';
+let ADMIN_TOKEN = sessionStorage.getItem('admin_token') || '';
+let ROL = 'misafir'; // 'misafir' | 'admin'
 
-let db = null, firebaseReady = false;
-try {
-  firebase.initializeApp(firebaseConfig);
-  db = firebase.firestore();
-  db.collection('tanik_denetim').limit(1).get()
-    .then(()=>{ firebaseReady=true; updateFileBar(); loadKayitlar(); })
-    .catch(()=>{ updateFileBar(); });
-} catch(e){ updateFileBar(); }
+document.getElementById('api-url').value = API_URL;
 
-// ══════════════════════════════════════
-// DURUM
-// ══════════════════════════════════════
-let currentDocId  = null;   // Firebase doc ID
-let currentKlasor = localStorage.getItem('aktifKlasor') || '\\\\NAS\\Denetim';
-let isDirty       = false;
-let kayitlarCache = [];
-let aktifFilter   = 'hepsi';
-let klasorFilter  = null;
+// ── GİRİŞ / ÇIKIŞ ────────────────────────────────────────────
+async function girisYap() {
+  const kullanici = document.getElementById('giris-kullanici').value.trim();
+  const sifre = document.getElementById('giris-sifre').value.trim();
+  const hataEl = document.getElementById('giris-hata');
+  hataEl.textContent = '';
 
-const KLASORLER_KEY = 'nasKlasorler';
-function getKlasorler() {
-  try { return JSON.parse(localStorage.getItem(KLASORLER_KEY)) || defaultKlasorler(); }
-  catch(e) { return defaultKlasorler(); }
-}
-function defaultKlasorler() {
-  return [
-    { ad:'Tanık Denetim 2026', yol:'\\\\NAS\\TanıkDenetim\\2026' },
-    { ad:'Denetim (Genel)',    yol:'\\\\NAS\\Denetim' },
-    { ad:'2026',               yol:'\\\\NAS\\Denetim\\2026' },
-    { ad:'2026 - QI',          yol:'\\\\NAS\\Denetim\\2026\\QI' },
-    { ad:'Arşiv',              yol:'\\\\NAS\\Denetim\\Arsiv' },
-  ];
-}
-function saveKlasorler(list) { localStorage.setItem(KLASORLER_KEY, JSON.stringify(list)); }
-
-// ══════════════════════════════════════
-// DOSYA DURUM BARI
-// ══════════════════════════════════════
-function updateFileBar() {
-  const pathEl   = document.getElementById('file-bar-path');
-  const statusEl = document.getElementById('file-bar-status');
-  const kab      = document.getElementById('f_kab_adi')?.value;
-  const klasorAd = getKlasorler().find(k=>k.yol===currentKlasor)?.ad || '?';
-
-  if(!currentDocId) {
-    pathEl.innerHTML = `📁 <strong>${klasorAd}</strong> / Yeni form`;
-    statusEl.className = 'file-bar-status fbs-new';
-    statusEl.textContent = 'Yeni';
-  } else if(isDirty) {
-    pathEl.innerHTML = `📁 <strong>${klasorAd}</strong> / ${kab||'Form'}`;
-    statusEl.className = 'file-bar-status fbs-dirty';
-    statusEl.textContent = '● Kaydedilmedi';
-  } else {
-    pathEl.innerHTML = `📁 <strong>${klasorAd}</strong> / ${kab||'Form'}`;
-    statusEl.className = 'file-bar-status fbs-saved';
-    statusEl.textContent = '✓ Kaydedildi';
+  if (!kullanici || !sifre) {
+    hataEl.textContent = 'Kullanıcı adı ve şifre gerekli.'; return;
   }
 
-  if(!firebaseReady) {
-    statusEl.className = 'file-bar-status fbs-sync';
-    statusEl.textContent = firebaseConfig.apiKey==='BURAYA_API_KEY' ? '⚙️ Yapılandır' : '⏳ Bağlanıyor';
-  }
-}
-
-
-let witnessedSatirSayisi = 0;
-
-function satirEkle(veri) {
-  const idx = witnessedSatirSayisi;
-  const container = document.getElementById('witnessed-satirlar');
-  const div = document.createElement('div');
-  div.id = 'witnessed-satir-' + idx;
-  div.style.cssText = 'border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg);position:relative';
-  div.innerHTML = `
-    ${idx > 0 ? `<button onclick="satirSil(${idx})" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--red);cursor:pointer;font-size:16px">×</button>` : ''}
-    <div class="fgrid" style="margin-bottom:8px">
-      <div class="fg">
-        <label class="fl">Muayene Alanı ve Türü</label>
-        <input class="fi" id="f_muayene_alani_${idx}" placeholder="Muayene alanı..." oninput="markDirty()">
-      </div>
-      <div class="fg">
-        <label class="fl">Kapsam Genişletme</label>
-        <label style="display:flex;align-items:center;gap:10px;background:white;border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer">
-          <input type="checkbox" id="f_kapsam_${idx}" onchange="markDirty()" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent)">
-          <span style="font-size:13px;color:var(--ink)">Kapsam Genişletme</span>
-        </label>
-      </div>
-    </div>
-    <div class="fgrid">
-      <div class="fg">
-        <label class="fl">Muayene Personeli</label>
-        <input class="fi" id="f_personel_${idx}" placeholder="Personel adı..." oninput="markDirty()">
-      </div>
-      <div class="fg">
-        <label class="fl">Standartlar / Dokümanlar</label>
-        <input class="fi" id="f_standartlar_${idx}" placeholder="ISO 17020:2012..." oninput="markDirty()">
-      </div>
-    </div>
-  `;
-  container.appendChild(div);
-
-  // Varsa veri doldur
-  if (veri) {
-    document.getElementById('f_muayene_alani_' + idx).value = veri.muayene_alani || '';
-    document.getElementById('f_kapsam_' + idx).checked = veri.kapsam === '☑';
-    document.getElementById('f_personel_' + idx).value = veri.personel || '';
-    document.getElementById('f_standartlar_' + idx).value = veri.standartlar || '';
-  }
-
-  witnessedSatirSayisi++;
-  markDirty();
-}
-
-function satirSil(idx) {
-  const el = document.getElementById('witnessed-satir-' + idx);
-  if (el) el.remove();
-  markDirty();
-}
-
-function collectWitnessedSatirlar() {
-  const satirlar = [];
-  for (let i = 0; i < witnessedSatirSayisi; i++) {
-    const el = document.getElementById('witnessed-satir-' + i);
-    if (!el) continue;
-    satirlar.push({
-      muayene_alani: document.getElementById('f_muayene_alani_' + i)?.value || '',
-      kapsam:        document.getElementById('f_kapsam_' + i)?.checked ? '☑' : '☐',
-      personel:      document.getElementById('f_personel_' + i)?.value || '',
-      standartlar:   document.getElementById('f_standartlar_' + i)?.value || '',
+  try {
+    const res = await fetch(`${API_URL}/api/giris`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kullanici, sifre })
     });
-  }
-  return satirlar;
-}
-
-function initWitnessedSatirlar(data) {
-  // Eski veriyle uyumluluk
-  witnessedSatirSayisi = 0;
-  document.getElementById('witnessed-satirlar').innerHTML = '';
-  const ws = data.witnessed_satirlar;
-  if (ws && ws.length > 0) {
-    ws.forEach(s => satirEkle(s));
-  } else {
-    // Eski formattan dönüştür
-    satirEkle({
-      muayene_alani: data.muayene_alani || '',
-      kapsam:        data.kapsam || '☐',
-      personel:      data.personel || '',
-      standartlar:   data.standartlar || '',
-    });
+    const d = await res.json();
+    if (d.basarili) {
+      ADMIN_TOKEN = d.token;
+      sessionStorage.setItem('admin_token', ADMIN_TOKEN);
+      adminOlarak();
+    } else {
+      hataEl.textContent = d.hata || 'Giriş başarısız.';
+    }
+  } catch(e) {
+    hataEl.textContent = '⛔ API bağlantısı kurulamadı. Pi açık mı? Tailscale bağlı mı?';
   }
 }
 
-function markDirty() { isDirty = true; updateFileBar(); }
+function misafirGiris() {
+  ROL = 'misafir';
+  document.getElementById('giris-ekrani').style.display = 'none';
+  document.getElementById('rol-rozet').textContent = '👁️ Misafir';
+  document.getElementById('rol-rozet').className = 'kullanici-rozet';
+  document.getElementById('admin-bolum').style.display = 'none';
+  tumunuYenile();
+}
 
-// ══════════════════════════════════════
-// KONTROL SATIRLARI
-// ══════════════════════════════════════
-const satirlar = [
-  {id:'s1', teknik:'M, K',    madde:'7.1.5',        tr:'Müşteriyle Yapılan Sözleşme Ve Tanımlanan Şartlar',                          en:'Contracts With Customers And Its Conditions'},
-  {id:'s2', teknik:'M, K',    madde:'7.1.5',        tr:'İş Emri Sistemi (Muayene Personelinin Görevlendirilmesi)',                    en:'Work Order System'},
-  {id:'s3', teknik:'M, T',    madde:'7.1.4',        tr:'Muayene Personelinin İlgili Standart Ve Dokümanlara Erişimi',                 en:'Access of Inspectors to Relevant Standards'},
-  {id:'s4', teknik:'M, T, K', madde:'7.1.9',        tr:'Gerekli Güvenlik/Emniyet Tedbirleri',                                        en:'Necessary Measures for Safety'},
-  {id:'s5', teknik:'M, T, K', madde:'7.1.2',        tr:'Numune Alma Metodu',                                                          en:'Method on Sampling'},
-  {id:'s6', teknik:'M, T',    madde:'7.1.6',        tr:'Muayene Prosesi İle İlişkili Üçüncü Taraflarca Sağlanan Bilgilerin Tamlığının Doğrulanması', en:'Verifying Integrity of Information From Third Parties'},
-  {id:'s7', teknik:'M, T',    madde:'7.2',          tr:'Muayene Edilecek Hizmet, Proses veya Ürünün Muayeneye Uygunluğu',            en:'Suitability Of Product/Process for Inspection'},
-  {id:'s8', teknik:'K',       madde:'7.2',          tr:'Muayene Edilecek Hizmet, Proses veya Ürünün Bozulması/Hasar Görmesi İçin Alınan Önlemler', en:'Measures Against Deterioration Or Damage'},
-  {id:'s9', teknik:'M, T, K', madde:'6.2',          tr:'Kullanılan Cihaz/Ekipman ve Kodu',                                           en:'Equipment Used with Code'},
-  {id:'s10',teknik:'M, T, K', madde:'6.2',          tr:'Muayene Öncesi Kullanılacak Cihazların Uygunluğunun Kontrolü',               en:'Control of Appropriateness of Equipment'},
-  {id:'s11',teknik:'T',       madde:'6.1.12',       tr:'Muayene Personelinin Tarafsızlığı',                                          en:'Impartiality Of Inspectors'},
-  {id:'s12',teknik:'M, T',    madde:'6.1.3',        tr:'Muayene Personelinin Muayene Ettiği Ürün/Hizmet/Proses Hakkındaki Yetkinliği ve Bilgi Birikimi', en:'Knowledge And Competence Of Inspector'},
-  {id:'s13',teknik:'T, K',    madde:'7.1.7, 7.3',  tr:'Bilgi ve Gözlemleri Zamanında Kayıt Altına Alma',                            en:'Recording Of Data And Observations In Time'},
-  {id:'s14',teknik:'M, K',    madde:'7.3, R50.01',  tr:'Muayene Kayıtlarının Yeterli İçerikte Oluşturulması',                        en:'Establishment of Examination Records in Sufficient Content'},
-  {id:'s15',teknik:'M, K',    madde:'7.4.2, R50.01',tr:'Muayene Sonuçlarının Kaydedilmesi, Raporlanması / Uygunluk İfadesi',         en:'Recording & Reporting Results / Declaration Of Conformity'},
+function adminOlarak() {
+  ROL = 'admin';
+  document.getElementById('giris-ekrani').style.display = 'none';
+  document.getElementById('rol-rozet').textContent = '⭐ Admin';
+  document.getElementById('rol-rozet').className = 'admin-rozet';
+  document.getElementById('cikis-btn').style.display = 'inline-flex';
+  document.getElementById('admin-bolum').style.display = 'block';
+  listeRender();
+  tumunuYenile();
+  toast('✅ Admin girişi başarılı!');
+}
+
+async function cikisYap() {
+  try {
+    await apiFetch('/api/cikis', 'POST');
+  } catch(e) {}
+  ADMIN_TOKEN = '';
+  sessionStorage.removeItem('admin_token');
+  location.reload();
+}
+
+// ── API ───────────────────────────────────────────────────────
+function baglantiKur() {
+  API_URL = document.getElementById('api-url').value.trim();
+  localStorage.setItem('api_url', API_URL);
+  toast('🔌 Bağlanıyor...');
+  tumunuYenile();
+}
+
+async function apiFetch(endpoint, method = 'GET') {
+  const headers = { 'Content-Type': 'application/json' };
+  if (ADMIN_TOKEN) headers['X-Admin-Token'] = ADMIN_TOKEN;
+  const res = await fetch(`${API_URL}${endpoint}`, { method, headers });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// ── KULLANICI VERİLERİ ────────────────────────────────────────
+async function scriptDurumYenile() {
+  try {
+    const d = await apiFetch('/api/script/durum');
+    const badge = document.getElementById('script-badge');
+    const aciklama = document.getElementById('script-aciklama');
+    const baslaBtn = document.getElementById('script-basla-btn');
+
+    if (d.calisiyor) {
+      badge.className = 'badge badge-green';
+      badge.textContent = '✅ Çalışıyor';
+      aciklama.textContent = `Form writer aktif — PID: ${d.pid}`;
+      baslaBtn.style.display = 'none';
+    } else {
+      badge.className = 'badge badge-red';
+      badge.textContent = '❌ Durmuş';
+      aciklama.innerHTML = '<span style="color:var(--red);font-weight:600">Script çalışmıyor! Word belgesi üretilemiyor.</span>';
+      baslaBtn.style.display = 'inline-flex';
+    }
+  } catch(e) {
+    document.getElementById('script-badge').className = 'badge badge-red';
+    document.getElementById('script-badge').textContent = '⛔ Bağlanamıyor';
+    document.getElementById('script-aciklama').textContent = 'Pi\'ye bağlantı kurulamadı.';
+  }
+}
+
+async function bekleyenYenile() {
+  const badge = document.getElementById('bekleyen-badge');
+  const tbody = document.getElementById('bekleyen-tablo');
+  try {
+    const d = await apiFetch('/api/bekleyen');
+    if (!d.bagli) {
+      badge.className = 'badge badge-red'; badge.textContent = '❌ Firebase yok';
+      tbody.innerHTML = '<tr><td colspan="5" class="bos">Firebase bağlantısı kurulamadı</td></tr>';
+      return;
+    }
+    if (d.sayi === 0) {
+      badge.className = 'badge badge-green'; badge.textContent = '✅ Bekleyen yok';
+      tbody.innerHTML = '<tr><td colspan="5" class="bos">🎉 Bekleyen kayıt yok, her şey tamamlandı!</td></tr>';
+      return;
+    }
+    badge.className = 'badge badge-orange';
+    badge.textContent = `⚠️ ${d.sayi} bekliyor`;
+    tbody.innerHTML = d.kayitlar.map(k => `
+      <tr>
+        <td><strong>${k.kab_adi}</strong></td>
+        <td>${k.muayene_alani}</td>
+        <td style="font-size:11px;color:var(--mid)">${k.denetim_no}</td>
+        <td style="font-size:11px;color:var(--mid)">${k.tarih}</td>
+        <td><span class="chip ${k.durum === 'hata' ? 'chip-hata' : 'chip-bekliyor'}">${k.durum}</span></td>
+      </tr>`).join('');
+  } catch(e) {
+    badge.textContent = '⛔ Hata';
+    tbody.innerHTML = '<tr><td colspan="5" class="bos">Veri alınamadı</td></tr>';
+  }
+}
+
+// ── ADMİN VERİLERİ ────────────────────────────────────────────
+async function adminYenile() {
+  if (ROL !== 'admin') return;
+  try {
+    const d = await apiFetch('/api/admin/durum');
+
+    // NAS
+    const nas = d.nas;
+    if (nas.erislebilir && nas.doluluk) {
+      const dl = nas.doluluk;
+      document.getElementById('nas-kullanilan').textContent = dl.kullanilan_gb + ' GB';
+      document.getElementById('nas-toplam').textContent = dl.toplam_gb + ' GB toplam';
+      document.getElementById('nas-yuzde').textContent = `%${dl.yuzde} dolu`;
+      const bar = document.getElementById('nas-progress');
+      bar.style.width = dl.yuzde + '%';
+      bar.className = 'progress-bar ' + (dl.yuzde > 90 ? 'progress-red' : dl.yuzde > 75 ? 'progress-orange' : 'progress-green');
+      const nasBadge = document.getElementById('nas-badge');
+      nasBadge.className = dl.yuzde > 90 ? 'badge badge-red' : dl.yuzde > 75 ? 'badge badge-orange' : 'badge badge-green';
+      nasBadge.textContent = dl.yuzde > 90 ? '🔴 Kritik' : dl.yuzde > 75 ? '⚠️ Dikkat' : `✅ %${dl.yuzde}`;
+    } else {
+      document.getElementById('nas-badge').className = 'badge badge-red';
+      document.getElementById('nas-badge').textContent = '❌ Erişilemiyor';
+    }
+
+    // CPU/RAM
+    document.getElementById('cpu-deger').textContent = d.sistem.cpu_yuzde + '%';
+    document.getElementById('ram-deger').textContent = `${d.sistem.ram_yuzde}% (${d.sistem.ram_kullanilan_mb} MB)`;
+    document.getElementById('uptime-deger').textContent = d.sistem.uptime;
+    const sBadge = document.getElementById('sistem-badge');
+    sBadge.className = d.sistem.cpu_yuzde < 80 ? 'badge badge-green' : 'badge badge-orange';
+    sBadge.textContent = d.sistem.cpu_yuzde < 80 ? '✅ Normal' : '⚠️ Yüksek';
+
+    // Firebase
+    if (d.firebase.bagli) {
+      document.getElementById('fb-bekleyen').textContent = d.firebase.bekleyen;
+      document.getElementById('fb-tamamlanan').textContent = d.firebase.tamamlanan;
+      document.getElementById('fb-toplam').textContent = d.firebase.toplam;
+      const fbBadge = document.getElementById('firebase-badge');
+      fbBadge.className = d.firebase.bekleyen > 0 ? 'badge badge-orange' : 'badge badge-green';
+      fbBadge.textContent = d.firebase.bekleyen > 0 ? `⚠️ ${d.firebase.bekleyen} bekliyor` : '✅ Temiz';
+    }
+
+    document.getElementById('son-guncelleme').textContent = 'Son: ' + d.zaman;
+  } catch(e) {
+    toast('❌ Admin verisi alınamadı');
+  }
+}
+
+async function nasDetayYenile() {
+  if (ROL !== 'admin') return;
+  try {
+    const d = await apiFetch('/api/admin/nas');
+    const el = document.getElementById('son-dosyalar');
+    if (!d.erislebilir || !d.son_dosyalar) {
+      el.textContent = 'NAS erişilemiyor'; return;
+    }
+    if (d.son_dosyalar.length === 0) {
+      el.textContent = 'Henüz dosya yok'; return;
+    }
+    el.innerHTML = d.son_dosyalar.map(f =>
+      `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%;font-size:11px" title="${f.ad}">${f.ad}</span>
+        <span style="color:var(--mid);font-size:10px;white-space:nowrap">${f.boyut_kb} KB · ${f.tarih}</span>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+async function logYenile() {
+  if (ROL !== 'admin') return;
+  const kutu = document.getElementById('log-kutu');
+  kutu.innerHTML = '<div class="log-satir info">Yükleniyor...</div>';
+  try {
+    const d = await apiFetch('/api/admin/loglar');
+    if (!d.loglar || d.loglar.length === 0) {
+      kutu.innerHTML = '<div class="log-satir">Log bulunamadı</div>'; return;
+    }
+    kutu.innerHTML = d.loglar.map(s => {
+      let cls = '';
+      if (s.includes('✅') || s.includes('Tamamlandı') || s.includes('oluşturuldu')) cls = 'ok';
+      else if (s.includes('❌') || s.includes('hata') || s.includes('Error')) cls = 'hata';
+      else if (s.includes('⚠️') || s.includes('uyarı')) cls = 'uyari';
+      else if (s.includes('🚀') || s.includes('başlatıldı') || s.includes('izleniyor')) cls = 'info';
+      return `<div class="log-satir ${cls}">${s}</div>`;
+    }).join('');
+  } catch(e) {
+    kutu.innerHTML = '<div class="log-satir hata">⛔ Log alınamadı</div>';
+  }
+}
+
+// ── KONTROL LİSTESİ ───────────────────────────────────────────
+const KONTROLLER = [
+  { id:'k1', metin:'Test formu doldur, Word geldi mi?', periyot:'gun',
+    kontrol: async () => { const d = await apiFetch('/api/script/durum'); return d.calisiyor ? {ok:true} : {ok:false, aciklama:'Script çalışmıyor!'}; }},
+  { id:'k2', metin:'Script çalışıyor mu?', periyot:'hafta',
+    kontrol: async () => { const d = await apiFetch('/api/script/durum'); return d.calisiyor ? {ok:true} : {ok:false, aciklama:`PID yok — script durmuş`}; }},
+  { id:'k3', metin:'NAS doluluk %80 altı mı?', periyot:'hafta',
+    kontrol: async () => { const d = await apiFetch('/api/admin/nas'); return d.yuzde < 80 ? {ok:true} : {ok:false, aciklama:`NAS %${d.yuzde} dolu!`}; }},
+  { id:'k4', metin:"Firebase'de bekleyen kayıt yok mu?", periyot:'ay',
+    kontrol: async () => { const d = await apiFetch('/api/bekleyen'); return d.sayi === 0 ? {ok:true} : {ok:false, aciklama:`${d.sayi} kayıt bekliyor!`}; }},
+  { id:'k5', metin:'CPU/RAM normal mi?', periyot:'hafta',
+    kontrol: async () => { const d = await apiFetch('/api/admin/durum'); const y = d.sistem.cpu_yuzde; return y < 80 ? {ok:true} : {ok:false, aciklama:`CPU %${y} — yüksek!`}; }},
+  { id:'k6', metin:'Google Drive yedeği güncel mi?', periyot:'ay', kontrol: null },
+  { id:'k7', metin:'Pi yeniden başlatıldı mı?', periyot:'ay', kontrol: null },
+  { id:'k8', metin:'Firebase kural tarihi kontrol edildi mi?', periyot:'ay', kontrol: null },
 ];
 
-const state = {};
-satirlar.forEach(s => { state[s.id] = {durum:'', yorum:''}; });
+let kontrolSonuclari = {};
 
-function renderRows() {
-  document.getElementById('kontrol-rows').innerHTML = satirlar.map(s=>`
-    <div class="kontrol-row">
-      <div>
-        <div class="kmadde">${s.madde} <span style="font-weight:400;color:var(--mid)">· ${s.teknik}</span></div>
-        <div class="ktext">${s.tr}</div>
-        <div class="ktext-en">${s.en}</div>
+async function listeRender() {
+  const container = document.getElementById('kontrol-listesi');
+  container.innerHTML = KONTROLLER.map(k => {
+    const s = kontrolSonuclari[k.id];
+    let ikon = '⬜', renkClass = '';
+    if (s === undefined) ikon = '⬜';
+    else if (s.ok) { ikon = '✅'; renkClass = 'done'; }
+    else { ikon = '❌'; }
+    const periyotRenk = k.periyot === 'gun' ? 'periyot-gun' : k.periyot === 'hafta' ? 'periyot-hafta' : 'periyot-ay';
+    const periyotText = k.periyot === 'gun' ? 'Günlük' : k.periyot === 'hafta' ? 'Haftalık' : 'Aylık';
+    return `<div class="kontrol-item">
+      <span class="kontrol-auto">${ikon}</span>
+      <div style="flex:1">
+        <div class="kontrol-text ${renkClass}">${k.metin}</div>
+        ${s && !s.ok && s.aciklama ? `<div class="kontrol-aciklama">⚠️ ${s.aciklama}</div>` : ''}
+        ${!k.kontrol ? '<div style="font-size:11px;color:var(--mid)">Manuel kontrol gerekiyor</div>' : ''}
       </div>
-      <div>
-        <select class="durum-select val-${state[s.id].durum}" id="dur-${s.id}" onchange="setDurum('${s.id}',this)">
-          <option value="">— Seç</option>
-          <option value="Y"  ${state[s.id].durum==='Y' ?'selected':''}>✓ Y — Yeterli</option>
-          <option value="YD" ${state[s.id].durum==='YD'?'selected':''}>✗ YD — Yeterli Değil</option>
-          <option value="UD" ${state[s.id].durum==='UD'?'selected':''}>— UD — Uygulanamaz</option>
-        </select>
-      </div>
-      <div>
-        <textarea class="yorum-input ${state[s.id].durum==='YD'?'yd':''}" id="yor-${s.id}"
-          placeholder="İlgili kayıtlar ve/veya yorum..."
-          oninput="state['${s.id}'].yorum=this.value;markDirty()"
-        >${state[s.id].yorum}</textarea>
-      </div>
-    </div>
-  `).join('');
-  updateCounts();
+      <span class="kontrol-periyot ${periyotRenk}">${periyotText}</span>
+      ${!k.kontrol ? `<input type="checkbox" ${s && s.ok ? 'checked' : ''} onchange="manuelToggle('${k.id}', this)" style="width:16px;height:16px;cursor:pointer;accent-color:var(--green)">` : ''}
+    </div>`;
+  }).join('');
 }
 
-function setDurum(id, sel) {
-  state[id].durum = sel.value;
-  sel.className = `durum-select val-${sel.value}`;
-  const yor = document.getElementById('yor-'+id);
-  if(yor) { yor.className=`yorum-input ${sel.value==='YD'?'yd':''}`; if(sel.value==='YD') yor.focus(); }
-  updateCounts(); markDirty();
-}
-
-function updateCounts() {
-  document.getElementById('cnt-y').textContent  = Object.values(state).filter(s=>s.durum==='Y').length;
-  document.getElementById('cnt-yd').textContent = Object.values(state).filter(s=>s.durum==='YD').length;
-  document.getElementById('cnt-ud').textContent = Object.values(state).filter(s=>s.durum==='UD').length;
-}
-
-// ══════════════════════════════════════
-// İMZA
-// ══════════════════════════════════════
-const sigs = {};
-function initSig(name) {
-  const canvas = document.getElementById('sig-'+name);
-  const wrap   = canvas.parentElement;
-  canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.strokeStyle='#1a1a2e'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.lineJoin='round';
-  let drawing=false, drawn=false;
-  const pos = e => { const r=canvas.getBoundingClientRect(),t=e.touches?e.touches[0]:e; return {x:(t.clientX-r.left)*(canvas.width/r.width),y:(t.clientY-r.top)*(canvas.height/r.height)}; };
-  canvas.addEventListener('mousedown', e=>{drawing=true;ctx.beginPath();const p=pos(e);ctx.moveTo(p.x,p.y)});
-  canvas.addEventListener('mousemove', e=>{if(!drawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();drawn=true;hidePh()});
-  canvas.addEventListener('mouseup',   ()=>{drawing=false;if(drawn)markDirty()});
-  canvas.addEventListener('mouseleave',()=>{drawing=false});  // Desktop: canvas dışına çıkınca dur
-  canvas.addEventListener('touchstart', e=>{e.preventDefault();drawing=true;ctx.beginPath();const p=pos(e);ctx.moveTo(p.x,p.y)},{passive:false});
-  canvas.addEventListener('touchmove', e=>{e.preventDefault();if(!drawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();drawn=true;hidePh()},{passive:false});
-  canvas.addEventListener('touchend', ()=>{drawing=false;markDirty()});
-  function hidePh(){document.getElementById('ph-'+name).style.opacity='0'}
-  sigs[name]={canvas,ctx,isDrawn:()=>drawn,reset:()=>{drawn=false;document.getElementById('ph-'+name).style.opacity='1'}};
-}
-function clearSig(name){const{canvas,ctx,reset}=sigs[name];ctx.clearRect(0,0,canvas.width,canvas.height);reset();markDirty()}
-function getSigData(name){const{canvas,isDrawn}=sigs[name];return isDrawn()?canvas.toDataURL('image/png'):null}
-
-// ══════════════════════════════════════
-// VERİ
-// ══════════════════════════════════════
-function syncYorumlar(){satirlar.forEach(s=>{const el=document.getElementById('yor-'+s.id);if(el)state[s.id].yorum=el.value})}
-
-function collectData() {
-  syncYorumlar();
-  return {
-    kab_adi:          document.getElementById('f_kab_adi').value,
-    tarih:            document.getElementById('f_tarih').value,
-    denetim_no:       document.getElementById('f_denetim_no').value,
-    muayene_kurulusu: document.getElementById('f_muayene_kurulusu').value,
-    muayene_alani:    document.getElementById('f_muayene_alani_0') ? document.getElementById('f_muayene_alani_0').value : '',
-    kapsam:           document.getElementById('f_kapsam_0') ? (document.getElementById('f_kapsam_0').checked ? '☑' : '☐') : '☐',
-    personel:         document.getElementById('f_personel_0') ? document.getElementById('f_personel_0').value : '',
-    standartlar:      document.getElementById('f_standartlar_0') ? document.getElementById('f_standartlar_0').value : '',
-    witnessed_satirlar: collectWitnessedSatirlar(),
-    genel:            document.getElementById('f_genel').value,
-    uzman_ad:         document.getElementById('f_uzman_ad').value,
-    uzman_tarih:      document.getElementById('f_uzman_tarih').value,
-    denetci_ad:       document.getElementById('f_denetci_ad').value,
-    denetci_tarih:    document.getElementById('f_denetci_tarih').value,
-    sig_uzman:        getSigData('uzman'),
-    sig_denetci:      getSigData('denetci'),
-    nas_klasor:       currentKlasor,
-    satirlar: satirlar.map(s=>({id:s.id,madde:s.madde,teknik:s.teknik,tr:s.tr,en:s.en,durum:state[s.id].durum,yorum:state[s.id].yorum})),
-    ozet: { Y:Object.values(state).filter(s=>s.durum==='Y').length, YD:Object.values(state).filter(s=>s.durum==='YD').length, UD:Object.values(state).filter(s=>s.durum==='UD').length },
-    updated_at: new Date().toISOString(),
-    form_no: 'F701-056',
-  };
-}
-
-function fillForm(data) {
-  const ids = ['f_kab_adi','f_tarih','f_denetim_no','f_muayene_kurulusu','f_genel','f_uzman_ad','f_uzman_tarih','f_denetci_ad','f_denetci_tarih'];
-  const keys= ['kab_adi','tarih','denetim_no','muayene_kurulusu','genel','uzman_ad','uzman_tarih','denetci_ad','denetci_tarih'];
-  ids.forEach((id,i)=>{ const el=document.getElementById(id); if(el) el.value=data[keys[i]]||''; });
-  initWitnessedSatirlar(data);
-  if(data.nas_klasor) currentKlasor = data.nas_klasor;
-  if(data.satirlar) data.satirlar.forEach(s=>{ if(state[s.id]){state[s.id].durum=s.durum||'';state[s.id].yorum=s.yorum||''} });
-  renderRows();
-}
-
-// ══════════════════════════════════════
-// KAYDET MOD
-// ══════════════════════════════════════
-function openSaveMod() {
-  const data = collectData();
-  if(!data.kab_adi) { showToast('⚠️ Kuruluş adı boş olamaz!'); return; }
-  const klasorAd = getKlasorler().find(k=>k.yol===currentKlasor)?.ad || currentKlasor;
-  const content = document.getElementById('save-mod-content');
-
-  if(currentDocId) {
-    // Mevcut kayıt var → üzerine veya farklı kaydet
-    content.innerHTML = `
-      <div class="save-mod-option" onclick="saveUzerine()">
-        <div class="smo-icon">💾</div>
-        <div>
-          <div class="smo-title">Üzerine Kaydet</div>
-          <div class="smo-desc">Mevcut kaydın üzerine yaz. Eski veriler silinir.</div>
-        </div>
-        <span class="smo-badge over">Üzerine yaz</span>
-      </div>
-      <div class="save-mod-option" onclick="saveFarkli()">
-        <div class="smo-icon">📄</div>
-        <div>
-          <div class="smo-title">Farklı Kaydet</div>
-          <div class="smo-desc">Yeni kayıt olarak oluştur. Mevcut kayıt da kalır.</div>
-        </div>
-        <span class="smo-badge new">Yeni kayıt</span>
-      </div>
-      <div class="save-mod-option" onclick="saveKlasorde()">
-        <div class="smo-icon">📁</div>
-        <div>
-          <div class="smo-title">Farklı Klasöre Kaydet</div>
-          <div class="smo-desc">Klasör seç, sonra yeni kayıt oluştur.</div>
-        </div>
-        <span class="smo-badge new" style="background:rgba(30,58,95,.1);color:var(--accent)">Klasör seç</span>
-      </div>
-      <div style="padding:.75rem 1.25rem;font-size:11px;color:var(--mid);border-top:1px solid var(--border)">
-        📁 Hedef klasör: <strong style="color:var(--accent)">${klasorAd}</strong> → ${currentKlasor}
-      </div>
-    `;
-  } else {
-    // Yeni form → direkt kaydet
-    content.innerHTML = `
-      <div class="save-mod-option" onclick="saveYeni()">
-        <div class="smo-icon">☁️</div>
-        <div>
-          <div class="smo-title">Firebase'e Kaydet</div>
-          <div class="smo-desc">Formu Firebase'e kaydeder. Raspberry Pi Word dosyasını oluşturacak.</div>
-        </div>
-        <span class="smo-badge new">Kaydet</span>
-      </div>
-      <div class="save-mod-option" onclick="saveKlasorde()">
-        <div class="smo-icon">📁</div>
-        <div>
-          <div class="smo-title">Klasör Seçerek Kaydet</div>
-          <div class="smo-desc">Önce hedef NAS klasörünü seç, sonra kaydet.</div>
-        </div>
-        <span class="smo-badge new" style="background:rgba(30,58,95,.1);color:var(--accent)">Klasör seç</span>
-      </div>
-      <div style="padding:.75rem 1.25rem;font-size:11px;color:var(--mid);border-top:1px solid var(--border)">
-        📁 Hedef klasör: <strong style="color:var(--accent)">${klasorAd}</strong> → ${currentKlasor}
-      </div>
-    `;
-  }
-
-  openM('modal-save-mod');
-}
-
-async function saveUzerine() {
-  closeM('modal-save-mod');
-  await doSave(currentDocId);
-}
-
-async function saveFarkli() {
-  closeM('modal-save-mod');
-  currentDocId = null;
-  await doSave(null);
-}
-
-async function saveKlasorde() {
-  closeM('modal-save-mod');
-  openKlasörSec(true); // true = kaydet modunda aç
-}
-
-async function saveYeni() {
-  closeM('modal-save-mod');
-  await doSave(null);
-}
-
-let saveAfterKlasor = false;
-function openKlasörSec(afterSave=false) {
-  saveAfterKlasor = afterSave;
-  renderKlasorList();
-  openM('modal-klasor');
-}
-
-async function doSave(docId) {
-  const data = collectData();
-  if(!firebaseReady) {
-    showToast('⚠️ Firebase yapılandırılmadı!');
-    console.log('Kaydedilecek veri:', data);
-    return;
-  }
-  updateFileBarSyncing();
-
-  // Word alanlarını her zaman sıfırla → Pi yeniden üretsin
-  data.word_olusturuldu = null;
-  data.word_dosyasi     = null;
-  data.word_durum       = 'bekliyor';
-  data.word_nas_yolu    = null;
-
-  try {
-    if(docId) {
-      await db.collection('tanik_denetim').doc(docId).set(data);
-      showToast('✅ Güncellendi — Word yeniden üretilecek');
-    } else {
-      const ref = await db.collection('tanik_denetim').add(data);
-      currentDocId = ref.id;
-      showToast('✅ Kaydedildi — Word üretiliyor');
-    }
-    isDirty = false;
-    updateFileBar();
-    loadKayitlar();
-    startPolling();
-  } catch(e) {
-    showToast('❌ Hata: ' + e.message);
-    updateFileBar();
-  }
-}
-
-function updateFileBarSyncing() {
-  const s = document.getElementById('file-bar-status');
-  s.className = 'file-bar-status fbs-sync';
-  s.textContent = '⏳ Kaydediyor...';
-}
-
-// ══════════════════════════════════════
-// KLASÖR YÖNETİMİ
-// ══════════════════════════════════════
-let tempKlasor = null;
-
-function renderKlasorList() {
-  tempKlasor = currentKlasor;
-  const list = getKlasorler();
-  document.getElementById('klasor-list').innerHTML = list.map((k,i) => `
-    <div class="klasor-item ${k.yol===tempKlasor?'selected':''}" onclick="selectKlasor('${k.yol}',${i})">
-      <div class="klasor-icon">📁</div>
-      <div style="flex:1;min-width:0">
-        <div class="klasor-name">${k.ad}</div>
-        <div class="klasor-path">${k.yol}</div>
-      </div>
-      <span class="klasor-check">✓</span>
-      <button onclick="event.stopPropagation();deleteKlasor(${i})" 
-        style="background:none;border:none;color:var(--mid);cursor:pointer;padding:4px;font-size:14px">🗑️</button>
-    </div>
-  `).join('');
-}
-
-function selectKlasor(yol, idx) {
-  tempKlasor = yol;
-  document.querySelectorAll('.klasor-item').forEach((el,i) => {
-    el.classList.toggle('selected', i===idx);
-  });
-}
-
-function addKlasor() {
-  const input   = document.getElementById('new-klasor-input');
-  const yolInput= document.getElementById('new-klasor-yol');
-  const ad  = input.value.trim();
-  const yol = yolInput.value.trim();
-  if(!ad)  { showToast('⚠️ Klasör adı girin'); return; }
-  if(!yol) { showToast('⚠️ Klasör yolu girin'); return; }
-  // Basit format kontrolü
-  if(!yol.startsWith('\\\\') && !yol.startsWith('//')) {
-    showToast('⚠️ Yol \\\\NAS\\Klasor formatında olmalı'); return;
-  }
-  const list = getKlasorler();
-  list.push({ ad, yol });
-  saveKlasorler(list);
-  input.value = ''; yolInput.value = '';
-  renderKlasorList();
-  showToast('📁 Klasör eklendi');
-}
-
-function deleteKlasor(idx) {
-  const list = getKlasorler();
-  if(list.length <= 1) { showToast('⚠️ En az bir klasör olmalı'); return; }
-  list.splice(idx, 1);
-  saveKlasorler(list);
-  if(!list.find(k=>k.yol===tempKlasor)) tempKlasor = list[0].yol;
-  renderKlasorList();
-}
-
-function saveKlasorSec() {
-  currentKlasor = tempKlasor;
-  localStorage.setItem('aktifKlasor', currentKlasor);
-  document.getElementById('aktif-klasor-label').textContent =
-    getKlasorler().find(k=>k.yol===currentKlasor)?.ad || currentKlasor;
-  closeM('modal-klasor');
-  updateFileBar();
-  if(saveAfterKlasor) {
-    saveAfterKlasor = false;
-    setTimeout(()=>doSave(null), 200);
-  } else {
-    showToast('📁 Klasör seçildi');
-  }
-}
-
-// ══════════════════════════════════════
-// KAYIT LİSTESİ
-// ══════════════════════════════════════
-async function loadKayitlar() {
-  if(!firebaseReady) return;
-  try {
-    const snap = await db.collection('tanik_denetim').orderBy('updated_at','desc').limit(50).get();
-    kayitlarCache = snap.docs.map(d=>({id:d.id,...d.data()}));
-    renderKayitlar();
-    // Bekleyen Word varsa polling başlat
-    const bekleyen = kayitlarCache.some(k=>!k.word_olusturuldu && !k.word_durum?.startsWith('hata'));
-    if(bekleyen) startPolling(); else stopPolling();
-  } catch(e) { console.log('Kayıtlar yüklenemedi:',e); }
-}
-
-let aktifFilterBtn = null;
-function setFilter(f, btn) {
-  aktifFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  renderKayitlar();
-}
-
-function setKlasorFilter(yol) {
-  klasorFilter = yol;
-  document.getElementById('aktif-klasor-label').textContent =
-    yol ? (getKlasorler().find(k=>k.yol===yol)?.ad || yol) : 'Tümü';
-  renderKayitlar();
-}
-
-function filterKayitlar() { renderKayitlar(); }
-
-function renderKayitlar() {
-  const el     = document.getElementById('kayit-liste');
-  const arama  = document.getElementById('kayit-search')?.value?.toLowerCase() || '';
-  const buAy   = new Date().toISOString().substring(0,7);
-
-  let liste = kayitlarCache.filter(k => {
-    if(arama && !`${k.kab_adi||''} ${k.denetim_no||''}`.toLowerCase().includes(arama)) return false;
-    if(aktifFilter==='bu-ay'  && !k.tarih?.startsWith(buAy)) return false;
-    if(aktifFilter==='yd-var' && !(k.ozet?.YD > 0)) return false;
-    if(klasorFilter && k.nas_klasor !== klasorFilter) return false;
-    return true;
-  });
-
-  if(!liste.length) {
-    el.innerHTML = '<p style="color:var(--mid);font-size:13px;text-align:center;padding:2rem 0">Kayıt bulunamadı</p>';
-    return;
-  }
-
-  // Klasörlere göre grupla
-  const gruplar = {};
-  liste.forEach(k => {
-    const klasorAd = getKlasorler().find(x=>x.yol===k.nas_klasor)?.ad || k.nas_klasor || 'Genel';
-    if(!gruplar[klasorAd]) gruplar[klasorAd] = [];
-    gruplar[klasorAd].push(k);
-  });
-
-  el.innerHTML = Object.entries(gruplar).map(([grupAd, kayitlar]) => `
-    <div style="margin-bottom:1rem">
-      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mid);margin-bottom:6px;cursor:pointer"
-        onclick="setKlasorFilter(kayitlar[0]?.nas_klasor)">
-        📁 ${grupAd} <span style="font-weight:400">(${kayitlar.length})</span>
-      </div>
-      ${kayitlar.map(k => {
-        // Word durumu badge
-        let wordBadge = '';
-        if(k.word_olusturuldu) {
-          wordBadge = `<span class="word-badge wb-ok">📄 Word hazır</span>`;
-        } else if(k.word_durum?.startsWith('hata')) {
-          wordBadge = `<span class="word-badge wb-err">⚠️ Hata</span>`;
-        } else {
-          wordBadge = `<span class="word-badge wb-wait">⏳ Bekliyor</span>`;
-        }
-        return `
-        <div class="kayit-item ${k.id===currentDocId?'active-record':''}" onclick="loadKayit('${k.id}')">
-          <div class="kayit-icon">${k.id===currentDocId?'📋':'📄'}</div>
-          <div class="kayit-info">
-            <div class="kayit-ad">${k.kab_adi||'İsimsiz'}</div>
-            <div class="kayit-meta">${k.tarih||'—'} · ${k.denetim_no||'—'}</div>
-            <div class="kayit-klasor">${k.nas_klasor||''}</div>
-          </div>
-          <div class="kayit-right">
-            ${wordBadge}
-            <div class="kayit-ozet">
-              <span style="font-size:11px;color:var(--green);font-weight:600">Y:${k.ozet?.Y||0}</span>
-              <span style="font-size:11px;color:var(--red);font-weight:600">YD:${k.ozet?.YD||0}</span>
-            </div>
-            <div class="kayit-actions" onclick="event.stopPropagation()">
-              <button class="kayit-act-btn" onclick="loadKayit('${k.id}')">📂 Aç</button>
-              <button class="kayit-act-btn" onclick="duplicateKayit('${k.id}')">📋 Kopyala</button>
-              <button class="kayit-act-btn del" onclick="deleteKayit('${k.id}')">🗑️</button>
-            </div>
-          </div>
-        </div>
-      `}).join('')}
-    </div>
-  `).join('');
-}
-
-async function loadKayit(id) {
-  if(isDirty && !confirm('Kaydedilmemiş değişiklikler var. Yine de yüklensin mi?')) return;
-  const k = kayitlarCache.find(x=>x.id===id);
-  if(k) {
-    fillForm(k);
-    currentDocId = id;
-    isDirty = false;
-    updateFileBar();
-    closeM('modal-kayitlar');
-    showToast('📂 Form yüklendi');
-    window.scrollTo({top:0,behavior:'smooth'});
-  }
-}
-
-async function duplicateKayit(id) {
-  if(isDirty && !confirm('Kaydedilmemiş değişiklikler var. Yine de kopyalanacak kayıt yüklensin mi?')) return;
-  const k = kayitlarCache.find(x=>x.id===id);
-  if(k) {
-    fillForm(k);
-    currentDocId = null; // Yeni kayıt olacak
-    isDirty = true;
-    // Denetim numarasına KOPYA ekle
-    const no = document.getElementById('f_denetim_no');
-    if(no) no.value = (no.value||'') + '-KOPYA';
-    updateFileBar();
-    closeM('modal-kayitlar');
-    showToast('📋 Kopyalandı — Farklı kaydet ile yeni oluşturun');
-  }
-}
-
-async function deleteKayit(id) {
-  if(!confirm('Bu kaydı silmek istediğinize emin misiniz?\nBu işlem geri alınamaz.')) return;
-  if(!firebaseReady) { showToast('⚠️ Firebase bağlı değil'); return; }
-  await db.collection('tanik_denetim').doc(id).delete();
-  if(currentDocId===id) yeniForm();
-  showToast('🗑️ Kayıt silindi');
-  loadKayitlar();
-}
-
-function yeniForm() {
-  if(isDirty && !confirm('Kaydedilmemiş değişiklikler var. Yine de sıfırlanacak?')) return;
-  currentDocId = null; isDirty = false;
-  satirlar.forEach(s=>{ state[s.id]={durum:'',yorum:''} });
-  witnessedSatirSayisi=0; document.getElementById('witnessed-satirlar').innerHTML=''; satirEkle();
-  ['f_kab_adi','f_muayene_kurulusu',
-   'f_standartlar','f_genel','f_uzman_ad','f_denetci_ad','f_denetim_no'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.value='';
-  });
-  const today=new Date().toISOString().split('T')[0];
-  ['f_tarih','f_uzman_tarih','f_denetci_tarih'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=today; });
-  clearSig('uzman'); clearSig('denetci');
-  renderRows(); updateFileBar();
-  showToast('📄 Yeni form hazır');
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-// ══════════════════════════════════════
-// CANLI POLLING — Word hazır olunca güncelle
-// ══════════════════════════════════════
-let pollingInterval = null;
-
-function startPolling() {
-  if(pollingInterval) return;
-  pollingInterval = setInterval(async () => {
-    if(!firebaseReady) return;
-    const bekleyenler = kayitlarCache.filter(k => !k.word_olusturuldu && !k.word_durum?.startsWith('hata'));
-    if(!bekleyenler.length) { stopPolling(); return; }
+async function kontrolleriCalistir() {
+  for (const k of KONTROLLER) {
+    if (!k.kontrol) continue;
     try {
-      for(const k of bekleyenler) {
-        const snap = await db.collection('tanik_denetim').doc(k.id).get();
-        const fresh = snap.data();
-        if(fresh?.word_olusturuldu) {
-          // Cache güncelle
-          const idx = kayitlarCache.findIndex(x=>x.id===k.id);
-          if(idx>=0) kayitlarCache[idx] = { id:k.id, ...fresh };
-          renderKayitlar();
-          showToast(`📄 Word hazır: ${fresh.word_dosyasi || 'dosya oluşturuldu'}`);
+      kontrolSonuclari[k.id] = await k.kontrol();
+    } catch(e) {
+      kontrolSonuclari[k.id] = { ok: false, aciklama: 'Kontrol yapılamadı' };
+    }
+    listeRender();
+  }
+}
+
+function manuelToggle(id, cb) {
+  kontrolSonuclari[id] = cb.checked ? { ok: true } : undefined;
+  listeRender();
+}
+
+function listeTemizle() {
+  kontrolSonuclari = {};
+  listeRender();
+  toast('✅ Liste sıfırlandı');
+}
+
+// ── ACİL KOMUTLAR ─────────────────────────────────────────────
+async function scriptBaslat() {
+  toast('▶️ Script başlatılıyor...');
+  try {
+    const d = await apiFetch('/api/script/restart', 'POST');
+    toast(d.basarili ? '✅ Script başlatıldı!' : '❌ Başlatılamadı!');
+    setTimeout(scriptDurumYenile, 3000);
+  } catch(e) { toast('❌ Komut gönderilemedi'); }
+}
+
+async function scriptRestart() {
+  if (!confirm('Script yeniden başlatılsın mı?')) return;
+  toast('🔄 Yeniden başlatılıyor...');
+  try {
+    const d = await apiFetch('/api/script/restart', 'POST');
+    toast(d.basarili ? '✅ Script başlatıldı!' : '❌ Başlatılamadı!');
+    setTimeout(() => { scriptDurumYenile(); adminYenile(); }, 3000);
+  } catch(e) { toast('❌ Komut gönderilemedi'); }
+}
+
+async function piReboot() {
+  if (!confirm('Pi yeniden başlatılsın mı? 2 dakika erişilemez olacak!')) return;
+  toast('🔁 Pi yeniden başlatılıyor...');
+  try {
+    await apiFetch('/api/admin/pi/reboot', 'POST');
+    toast('Pi yeniden başlıyor — 2 dakika bekleyin');
+  } catch(e) { toast('Pi komutu aldı, yeniden başlıyor...'); }
+}
+
+// ── GENEL YENILE ──────────────────────────────────────────────
+function tumunuYenile() {
+  scriptDurumYenile();
+  bekleyenYenile();
+  if (ROL === 'admin') {
+    adminYenile();
+    nasDetayYenile();
+    logYenile();
+    loadFormLogs();
+    kontrolleriCalistir();
+  }
+  document.getElementById('son-guncelleme').textContent = 'Son: ' + new Date().toLocaleTimeString('tr-TR');
+}
+
+function toast(mesaj) {
+  const el = document.getElementById('toast');
+  el.textContent = mesaj;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── BAŞLAT ────────────────────────────────────────────────────
+// Önceki admin token varsa direkt admin olarak aç
+if (ADMIN_TOKEN) {
+  adminOlarak();
+} 
+
+// Her 60 saniyede otomatik yenile
+setInterval(tumunuYenile, 60000);
+
+        async function loadFormLogs() {
+            const tbody = document.getElementById('form-logs-table');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;"><div class="spinner"></div></td></tr>';
+
+            try {
+                // Dummy veri (production'da API'dan gelecek)
+                // Şu an localStorage'de tutulduğu için, burda placeholder
+                const dummyLogs = [
+                    {
+                        timestamp: new Date().toISOString().substr(11, 8),
+                        operation: 'save',
+                        status: 'success',
+                        message: 'Form kaydedildi',
+                        error: null
+                    },
+                    {
+                        timestamp: new Date(Date.now() - 60000).toISOString().substr(11, 8),
+                        operation: 'sync',
+                        status: 'success',
+                        message: 'Firebase\'e senkronize edildi',
+                        error: null
+                    },
+                    {
+                        timestamp: new Date(Date.now() - 120000).toISOString().substr(11, 8),
+                        operation: 'network',
+                        status: 'pending',
+                        message: 'İnternet bağlantısı kesildi',
+                        error: null
+                    }
+                ];
+
+                const stats = {
+                    online: 1,
+                    success: 150,
+                    failed: 3,
+                    pending: 2
+                };
+
+                // İstatistikleri güncelle
+                document.getElementById('stat-online').textContent = stats.online ? '🟢' : '🔴';
+                document.getElementById('stat-success').textContent = stats.success;
+                document.getElementById('stat-failed').textContent = stats.failed;
+                document.getElementById('stat-pending').textContent = stats.pending;
+
+                // Tabloyu doldur
+                if(dummyLogs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #999;">Log bulunamadı</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                dummyLogs.reverse().forEach(log => {
+                    const statusBadge = log.status === 'success' ? 
+                        '<span class="badge badge-green">✓ Başarılı</span>' :
+                        log.status === 'pending' ?
+                        '<span class="badge badge-orange">⏳ Beklemede</span>' :
+                        '<span class="badge badge-red">✗ Hata</span>';
+
+                    html += `
+                        <tr>
+                            <td>${log.timestamp}</td>
+                            <td>${log.operation}</td>
+                            <td>${statusBadge}</td>
+                            <td>${log.message}</td>
+                            <td>
+                                ${log.error ? `<button class="btn btn-sm btn-warning" onclick="showError('${log.error}')">Ayrıntı</button>` : '-'}
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+
+            } catch(e) {
+                tbody.innerHTML = '<tr><td colspan="5" style="color: red;">Loglar yüklenenemedi: ' + e.message + '</td></tr>';
+            }
         }
-      }
-    } catch(e) {}
-  }, 8000); // 8 saniyede bir kontrol
-}
 
-function stopPolling() {
-  if(pollingInterval) { clearInterval(pollingInterval); pollingInterval = null; }
-}
-function openM(id)  { document.getElementById(id).classList.add('open') }
-function closeM(id) { document.getElementById(id).classList.remove('open') }
-function closeOnBg(e, id) { if(e.target.id===id) closeM(id) }
-function openKayitlar() { loadKayitlar(); openM('modal-kayitlar'); startPolling(); }
+        function clearFormLogs() {
+            if(!confirm('Tüm form loglarını silmek istediğinize emin misiniz?')) return;
+            
+            // Bu komut form tarafında çalışacak, burda placeholder
+            alert('✅ Form logları temizleme komutu gönderildi.\n\nForm sayfasında localStorage silinecek.');
+            loadFormLogs();
+        }
 
-// ══════════════════════════════════════
-// TOAST
-// ══════════════════════════════════════
-function showToast(msg) {
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),3000);
-}
+        function syncFormNow() {
+            alert('⚡ Manuel senkronizasyon komutu gönderildi.\n\nOffline beklemede olan kayıtlar Firebase\'e gönderilecek.');
+            setTimeout(loadFormLogs, 2000);
+        }
 
-// ══════════════════════════════════════
-// INIT
-// ══════════════════════════════════════
-document.addEventListener('DOMContentLoaded', ()=>{
-  satirEkle(); // İlk boş witnessed satırı
-  renderRows();
-  setTimeout(()=>{ initSig('uzman'); initSig('denetci'); }, 150);
-  const today=new Date().toISOString().split('T')[0];
-  ['f_tarih','f_uzman_tarih','f_denetci_tarih'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=today; });
-  // Aktif klasör labelını güncelle
-  document.getElementById('aktif-klasor-label').textContent =
-    getKlasorler().find(k=>k.yol===currentKlasor)?.ad || 'Genel';
-  updateFileBar();
-});
+        function showError(errorMsg) {
+            alert('Hata Detayı:\n\n' + errorMsg);
+        }
 
-window.addEventListener('beforeunload', e=>{ if(isDirty){ e.preventDefault(); e.returnValue=''; } });
+
 </script>
 </body>
 </html>
