@@ -1401,24 +1401,33 @@ window.doSave = async function(docId) {
     if(isOnline && firebaseReady) {
       // Online: Firebase'e direkt gönder
       try {
-        await db.collection('tanik_denetim').doc(docId).set(formData, { merge: true });
+        if(docId) {
+          await db.collection('tanik_denetim').doc(docId).set(formData, { merge: true });
+        } else {
+          const ref = await db.collection('tanik_denetim').add(formData);
+          currentDocId = ref.id;
+          docId = ref.id;
+        }
         FormLogger.log('save', 'success', `Kaydedildi: ${docId}`);
         showToast('✅ Kaydedildi');
+        isDirty = false;
+        updateFileBar();
+        loadKayitlar();
+        startPolling();
       } catch(error) {
         // Firebase başarısız, localStorage'e ekle
-        PendingSaves.add(docId, formData);
+        const tempId = docId || 'offline_' + Date.now();
+        PendingSaves.add(tempId, formData);
         FormLogger.log('save', 'pending', `Firebase başarısız, offline beklemede`, error);
         showToast('⚠️ İnternet sorunu, offline beklemede');
       }
     } else {
       // Offline: localStorage'e ekle
-      PendingSaves.add(docId, formData);
-      FormLogger.log('save', 'pending', `Offline modda kaydedildi: ${docId}`);
+      const tempId = docId || 'offline_' + Date.now();
+      PendingSaves.add(tempId, formData);
+      FormLogger.log('save', 'pending', `Offline modda kaydedildi: ${tempId}`);
       showToast('🔴 Offline — İnternet gelince gönderilecek');
     }
-    
-    isDirty = false;
-    updateFileBar();
     
   } catch(error) {
     FormLogger.log('save', 'failed', `Kayıt hatası`, error);
