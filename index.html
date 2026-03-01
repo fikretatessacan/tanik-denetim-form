@@ -1385,7 +1385,7 @@ window.doSave = async function(docId) {
       denetci_ad: document.getElementById('f_denetci_ad')?.value || '',
       denetci_tarih: document.getElementById('f_denetci_tarih')?.value || '',
       // Witnessed satirlar
-      witnessed_satirlar: witnessedSatirlarToArray(),
+      witnessed_satirlar: collectWitnessedSatirlar(),
       // Control rows
       satirlar: satirlar.map(s => ({
         id: s.id,
