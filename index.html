@@ -1253,6 +1253,26 @@ class FormLogger {
     localStorage.removeItem(FORM_LOGS_KEY);
     FormLogger.log('system', 'success', 'Loglar temizlendi');
   }
+
+  static async pushToBakimAPI() {
+    const BAKIM_API = 'http://100.82.246.45:5050';
+    try {
+      const logs = this.getLogs();
+      const stats = {
+        success: logs.filter(l => l.status === 'success').length,
+        failed: logs.filter(l => l.status === 'failed').length,
+        pending: logs.filter(l => l.status === 'pending').length,
+      };
+      await fetch(`${BAKIM_API}/api/form-logs/push`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logs: logs.slice(-50), stats, isOnline: firebaseGercekOnline }),
+        signal: AbortSignal.timeout(5000)
+      });
+    } catch(e) {
+      // Bakım API erişilemez — sorun değil, sessizce geç
+    }
+  }
 }
 
 // ── PENDING SAVES (Offline) ──────────────
@@ -1517,6 +1537,10 @@ window.addEventListener('DOMContentLoaded', () => {
   
   // Her 5 saniyede ping at ve status güncelle
   setInterval(() => { updateFileBarStatus(); firebasePing(); }, 5000);
+  
+  // Her 60 saniyede bakım API'sine log gönder
+  setInterval(() => FormLogger.pushToBakimAPI(), 60000);
+  setTimeout(() => FormLogger.pushToBakimAPI(), 5000); // Açılışta 5 sn sonra ilk push
 });
 
 // ── EXPORT for API ──────────────────────
